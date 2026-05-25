@@ -41,7 +41,8 @@ Keep this file on the server, not in Git:
 `/home/dev_ssh/cpcadvertising/.env.local`
 
 ```bash
-TRAFFICHAUS_API_KEY=
+TRAFFICHAUS_ADVERTISER_API_KEY=
+TRAFFICHAUS_STATS_API_KEY=
 TRAFFICHAUS_API_BASE_URL=http://admin.traffichaus.com/api/v1
 NEXT_PUBLIC_MOCK_TRAFFICHAUS=false
 ```

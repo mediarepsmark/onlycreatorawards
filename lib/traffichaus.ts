@@ -11,7 +11,12 @@ const getTrafficHausBaseUrl = () =>
 
 const isMockMode = () => process.env.NEXT_PUBLIC_MOCK_TRAFFICHAUS !== "false";
 
-const getApiKey = () => process.env.TRAFFICHAUS_API_KEY;
+const getAdvertiserApiKey = () => process.env.TRAFFICHAUS_ADVERTISER_API_KEY;
+
+const getStatsApiKey = () =>
+  process.env.TRAFFICHAUS_STATS_API_KEY ||
+  process.env.TRAFFICHAUS_PUBLISHER_API_KEY ||
+  process.env.TRAFFICHAUS_API_KEY;
 
 const parseTrafficHausResponse = async (response: Response) => {
   const text = await response.text();
@@ -27,9 +32,9 @@ const parseTrafficHausResponse = async (response: Response) => {
 export const createTrafficHausCampaign = async (
   payload: TrafficHausPayload
 ): Promise<TrafficHausCreateResponse> => {
-  const apiKey = getApiKey();
+  const apiKey = getAdvertiserApiKey();
 
-  if (isMockMode() || !apiKey) {
+  if (isMockMode()) {
     return {
       mode: "mock",
       status: 200,
@@ -40,6 +45,12 @@ export const createTrafficHausCampaign = async (
         message: "Mock TrafficHaus campaign created."
       }
     };
+  }
+
+  if (!apiKey) {
+    throw new Error(
+      "TrafficHaus advertiser API key is not configured. Add TRAFFICHAUS_ADVERTISER_API_KEY before live campaign creation."
+    );
   }
 
   const url = new URL(`${getTrafficHausBaseUrl()}/v1.php`);
@@ -69,7 +80,7 @@ export const createTrafficHausCampaign = async (
 };
 
 export const getTrafficHausAdvertiserStats = async (params: TrafficHausStatsParams) => {
-  const apiKey = getApiKey();
+  const apiKey = getStatsApiKey();
 
   if (isMockMode() || !apiKey) {
     return {

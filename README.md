@@ -17,12 +17,16 @@ Next.js campaign setup module for creating TrafficHaus advertiser campaigns and 
 ## Environment
 
 ```bash
-TRAFFICHAUS_API_KEY=
+TRAFFICHAUS_ADVERTISER_API_KEY=
+TRAFFICHAUS_STATS_API_KEY=
 TRAFFICHAUS_API_BASE_URL=http://admin.traffichaus.com/api/v1
 NEXT_PUBLIC_MOCK_TRAFFICHAUS=true
 ```
 
-Mock mode is on by default. On production, set `NEXT_PUBLIC_MOCK_TRAFFICHAUS=false` and provide `TRAFFICHAUS_API_KEY` in `/home/dev_ssh/cpcadvertising/.env.local`.
+Mock mode is on by default. On production, set `NEXT_PUBLIC_MOCK_TRAFFICHAUS=false` in `/home/dev_ssh/cpcadvertising/.env.local`.
+
+- `TRAFFICHAUS_ADVERTISER_API_KEY` is required for live campaign creation.
+- `TRAFFICHAUS_STATS_API_KEY` can be a publisher/stats-capable key for stats lookups only.
 
 ## Run locally
 

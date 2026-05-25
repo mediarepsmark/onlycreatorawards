@@ -46,18 +46,19 @@ export async function POST(request: Request) {
       ok: true,
       message:
         result.mode === "mock"
-          ? "Mock campaign created. Set NEXT_PUBLIC_MOCK_TRAFFICHAUS=false and TRAFFICHAUS_API_KEY for live submission."
+          ? "Mock campaign created. Set NEXT_PUBLIC_MOCK_TRAFFICHAUS=false and TRAFFICHAUS_ADVERTISER_API_KEY for live submission."
           : "TrafficHaus campaign created.",
       data: result,
       payload
     });
   } catch (error) {
+    const message = error instanceof Error ? error.message : "Unable to create TrafficHaus campaign.";
     return NextResponse.json(
       {
         ok: false,
-        message: error instanceof Error ? error.message : "Unable to create TrafficHaus campaign."
+        message
       },
-      { status: 500 }
+      { status: message.includes("advertiser API key") ? 503 : 500 }
     );
   }
 }
