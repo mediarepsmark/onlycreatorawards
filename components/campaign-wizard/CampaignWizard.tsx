@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import {
@@ -221,14 +222,19 @@ export function CampaignWizard() {
 
         <header className="relative z-10 px-4 py-4 sm:px-6">
           <div className="mx-auto flex max-w-6xl items-center justify-between gap-4">
-            <a className="flex items-center gap-3" href="/campaigns/new" aria-label="CPCAdvertising.com">
-              <span className="grid h-10 w-10 place-items-center rounded-lg border border-white/15 bg-white text-xs font-extrabold text-black shadow-sm">
-                CPC
-              </span>
-              <span>
-                <strong className="block text-sm text-white">CPCAdvertising.com</strong>
-                <span className="block text-xs text-white/55">AI creatives + campaigns</span>
-              </span>
+            <a
+              className="inline-flex rounded-lg border border-white/15 bg-white p-1 shadow-[0_0_24px_rgba(115,221,255,0.16)]"
+              href="/campaigns/new"
+              aria-label="CPCAdvertising.com"
+            >
+              <Image
+                alt="CPCAdvertising.com"
+                className="h-12 w-auto rounded-md object-contain"
+                height={298}
+                priority
+                src="/brand/cpcadvertising-logo-header.png"
+                width={640}
+              />
             </a>
 
             <div className="hidden items-center gap-2 md:flex">
