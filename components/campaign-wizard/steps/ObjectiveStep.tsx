@@ -3,10 +3,10 @@
 import type { CampaignObjective, CampaignStepProps } from "@/types/campaign";
 
 const objectives: Array<{ id: CampaignObjective; title: string; copy: string }> = [
-  { id: "traffic", title: "Traffic", copy: "Prioritize visits and top-funnel scale." },
-  { id: "conversions", title: "Conversions", copy: "Optimize toward signups, purchases, or leads." },
-  { id: "lead_generation", title: "Lead generation", copy: "Focus the setup around form fills or booked calls." },
-  { id: "retargeting", title: "Retargeting", copy: "Aim the campaign at known audiences and return visits." }
+  { id: "traffic", title: "Paid clicks", copy: "Drive qualified visitors to the product URL at the selected max CPC." },
+  { id: "conversions", title: "Purchases", copy: "Drive clicks with stronger buying intent for product sales or checkout starts." },
+  { id: "lead_generation", title: "Leads", copy: "Drive clicks from people likely to submit a form or book a call." },
+  { id: "retargeting", title: "Retargeting", copy: "Drive return clicks from people who already know the product." }
 ];
 
 export function ObjectiveStep({ draft, updateDraft }: CampaignStepProps) {
@@ -48,8 +48,8 @@ export function ObjectiveStep({ draft, updateDraft }: CampaignStepProps) {
 
       <label className="flex min-h-12 items-center justify-between gap-4 rounded-lg border border-line bg-slate-50 px-4">
         <span>
-          <span className="block font-extrabold">NSFW inventory</span>
-          <span className="block text-sm text-muted">Maps to TrafficHaus is_nsfw.</span>
+          <span className="block font-extrabold">Adult or restricted inventory</span>
+          <span className="block text-sm text-muted">Allow partner channels that require explicit category approval.</span>
         </span>
         <input
           className="h-5 w-5 accent-brand-green"

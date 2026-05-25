@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { BarChart3, CheckCircle2, Clipboard, Rocket, TriangleAlert } from "lucide-react";
 
 import type {
+  CampaignDraft,
   CampaignStepProps,
   TrafficHausPayload,
   ValidationResult
@@ -29,7 +30,18 @@ const defaultStartDate = () => {
   return isoDate(date);
 };
 
+const partnerLabels: Record<CampaignDraft["partnerChannels"][number], string> = {
+  google: "Google",
+  instagram: "Instagram",
+  snapchat: "Snapchat",
+  outbrain: "Outbrain",
+  taboola: "Taboola",
+  nativo: "Nativo",
+  traffichaus: "TrafficHaus"
+};
+
 export function ReviewLaunchStep({
+  draft,
   isLaunching,
   launchState,
   onLaunch,
@@ -88,7 +100,7 @@ export function ReviewLaunchStep({
           <div>
             <p className="text-xs font-extrabold uppercase text-brand-green">Launch readiness</p>
             <h2 className="text-lg font-extrabold">
-              {validation.valid ? "Required TrafficHaus fields are ready." : "Required fields are missing."}
+              {validation.valid ? "Generated click campaign is ready." : "Required fields are missing."}
             </h2>
           </div>
           {validation.valid ? (
@@ -113,7 +125,11 @@ export function ReviewLaunchStep({
           onClick={onLaunch}
         >
           <Rocket className="h-4 w-4" />
-          {isLaunching ? "Submitting..." : "Launch Campaign"}
+          {isLaunching
+            ? "Submitting..."
+            : draft.customerApprovalMode === "review_first"
+              ? "Generate Approval Packet"
+              : "Run Click Campaign"}
         </button>
 
         <div
@@ -139,7 +155,7 @@ export function ReviewLaunchStep({
         <div className="flex flex-col gap-3 border-b border-line p-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="text-xs font-extrabold uppercase text-brand-green">Payload preview</p>
-            <h2 className="text-lg font-extrabold">TrafficHaus create request</h2>
+            <h2 className="text-lg font-extrabold">Connected partner request</h2>
           </div>
           <button
             className="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-line bg-white px-3 font-extrabold text-ink hover:bg-slate-50"
@@ -153,6 +169,22 @@ export function ReviewLaunchStep({
         <pre className="max-h-[520px] overflow-auto bg-[#101816] p-4 text-sm leading-6 text-emerald-100">
           {payloadJson}
         </pre>
+      </section>
+
+      <section className="rounded-lg border border-line bg-white p-4">
+        <p className="text-xs font-extrabold uppercase text-brand-green">CPCAdvertising run plan</p>
+        <div className="mt-3 grid gap-3 sm:grid-cols-2">
+          <InfoTile label="Product URL" value={draft.landingPageUrl || "Missing"} />
+          <InfoTile label="Max CPC" value={`$${draft.bidAmount || "0"}`} />
+          <InfoTile
+            label="Approval"
+            value={draft.customerApprovalMode === "review_first" ? "Review ads first" : "Run for clicks"}
+          />
+          <InfoTile
+            label="Partners"
+            value={draft.partnerChannels.map((partner) => partnerLabels[partner]).join(", ") || "None selected"}
+          />
+        </div>
       </section>
 
       <section className="rounded-lg border border-line bg-white p-4">
@@ -222,6 +254,15 @@ export function ReviewLaunchStep({
           ) : null}
         </div>
       </section>
+    </div>
+  );
+}
+
+function InfoTile({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-lg bg-slate-50 p-3">
+      <p className="text-sm font-extrabold uppercase text-muted">{label}</p>
+      <p className="mt-1 break-words font-semibold text-ink">{value}</p>
     </div>
   );
 }

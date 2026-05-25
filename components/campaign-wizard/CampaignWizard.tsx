@@ -44,13 +44,13 @@ import type {
 } from "@/types/campaign";
 
 const steps: Array<{ id: CampaignWizardStep; label: string }> = [
-  { id: "objective", label: "Campaign Objective" },
-  { id: "offer", label: "Offer / Landing Page" },
-  { id: "targeting", label: "Targeting" },
-  { id: "ad-format", label: "Ad Format" },
-  { id: "budget", label: "Budget & Bid" },
-  { id: "creative", label: "Creative" },
-  { id: "review", label: "Review & Launch" }
+  { id: "objective", label: "Click Goal" },
+  { id: "offer", label: "Product & URL" },
+  { id: "targeting", label: "Restrictions" },
+  { id: "ad-format", label: "Partner Channels" },
+  { id: "budget", label: "Max CPC" },
+  { id: "creative", label: "Generated Ads" },
+  { id: "review", label: "Review & Run" }
 ];
 
 type LaunchState = {
@@ -63,7 +63,7 @@ export function CampaignWizard() {
   const [draft, setDraft] = useState<CampaignDraft>(defaultCampaignDraft);
   const [activeStep, setActiveStep] = useState<CampaignWizardStep>("objective");
   const [prompt, setPrompt] = useState(
-    "Generate creatives, targeting, budget, and a TrafficHaus-ready native campaign for CPC Advertising."
+    "Promote my product at https://example.com. Generate the ads, apply my restrictions, and drive clicks at a max CPC I choose."
   );
   const [isLaunching, setIsLaunching] = useState(false);
   const [launchState, setLaunchState] = useState<LaunchState>({
@@ -84,18 +84,40 @@ export function CampaignWizard() {
   const goNext = () => setActiveStep(steps[Math.min(activeIndex + 1, steps.length - 1)].id);
   const goBack = () => setActiveStep(steps[Math.max(activeIndex - 1, 0)].id);
 
+  const extractFirstUrl = (value: string) => value.match(/https?:\/\/[^\s]+/i)?.[0] || "";
+
+  const displayFromUrl = (value: string) =>
+    value
+      .replace(/^https?:\/\//, "")
+      .replace(/^www\./, "")
+      .split("/")[0];
+
+  const productFromUrl = (value: string) =>
+    displayFromUrl(value)
+      .replace(/\.[a-z]{2,}$/i, "")
+      .replace(/[-_]/g, " ")
+      .trim();
+
   const applyPrompt = () => {
     const cleanPrompt = prompt.trim();
     if (!cleanPrompt) return;
+    const productUrl = extractFirstUrl(cleanPrompt) || draft.landingPageUrl;
+    const displayUrl = displayFromUrl(productUrl || draft.displayUrl);
+    const product = productFromUrl(productUrl || displayUrl) || "your product";
 
     updateDraft({
-      campaignName: cleanPrompt.length > 70 ? `${cleanPrompt.slice(0, 67)}...` : cleanPrompt,
+      campaignName: `${product} - AI Click Campaign`,
       offerDescription: cleanPrompt,
-      headline: "Launch smarter paid traffic in minutes",
+      landingPageUrl: productUrl,
+      displayUrl,
+      creativeUrl: "https://app.cpcadvertising.com/brand/cpcadvertising-logo.png",
+      bidType: "cpc",
+      partnerChannels: ["google", "instagram", "snapchat", "outbrain", "taboola", "nativo", "traffichaus"],
+      headline: `Get qualified clicks to ${product}`,
       description:
-        "Plan, target, and submit TrafficHaus-ready native campaigns from one focused advertising workspace.",
+        "CPCAdvertising.com generates ads, applies restrictions, and drives paid clicks to the product page.",
       keywords: Array.from(
-        new Set([...draft.keywords, "campaign setup", "native demand", "performance advertising"])
+        new Set([...draft.keywords, "product clicks", "buyer intent", "performance advertising"])
       )
     });
     setActiveStep("offer");
@@ -104,11 +126,12 @@ export function CampaignWizard() {
   const applyQuickAction = (action: "creative" | "targeting" | "budget") => {
     if (action === "creative") {
       updateDraft({
-        headline: `${draft.campaignName.replace(/\s+-\s+.*/, "")}: campaign setup that moves faster`,
+        creativeUrl: "https://app.cpcadvertising.com/brand/cpcadvertising-logo.png",
+        headline: `Get qualified clicks to ${draft.displayUrl || "your product"}`,
         description:
-          "Turn a campaign brief into TrafficHaus-ready targeting, bidding, and native creative without extra handoff.",
+          "CPCAdvertising.com generates ads, applies your restrictions, and sends paid clicks to the product page.",
         keywords: Array.from(
-          new Set([...draft.keywords, "buyer intent", "campaign automation", "native advertising"])
+          new Set([...draft.keywords, "buyer intent", "product clicks", "campaign automation"])
         )
       });
       setActiveStep("creative");
@@ -119,17 +142,18 @@ export function CampaignWizard() {
         geoTargets: ["united states"],
         deviceTargets: ["desktop", "mobile", "tablet"],
         languageTargets: ["english"],
-        browsers: ["chrome", "firefox", "safari", "edge"]
+        browsers: ["chrome", "firefox", "safari", "edge"],
+        partnerChannels: ["google", "instagram", "snapchat", "outbrain", "taboola", "nativo", "traffichaus"]
       });
       setActiveStep("targeting");
     }
 
     if (action === "budget") {
       updateDraft({
-        bidType: "cpm",
-        bidAmount: "1.30",
-        dailyBudget: "100",
-        totalBudget: "1000",
+        bidType: "cpc",
+        bidAmount: "0.25",
+        dailyBudget: "50",
+        totalBudget: "250",
         frequencyCapType: "site",
         frequencyCapValue: 2
       });
@@ -141,14 +165,35 @@ export function CampaignWizard() {
     if (!validation.valid) {
       setLaunchState({
         status: "error",
-        message: "Required TrafficHaus fields are missing.",
+        message: "Required launch fields are missing.",
         response: validation.errors
       });
       return;
     }
 
+    if (draft.customerApprovalMode === "review_first") {
+      setLaunchState({
+        status: "success",
+        message: "Generated ads are ready for customer approval. Partner launch is paused until sign-off.",
+        response: {
+          approvalMode: draft.customerApprovalMode,
+          productUrl: draft.landingPageUrl,
+          selectedPartners: draft.partnerChannels,
+          creative: {
+            asset: draft.creativeUrl,
+            headline: draft.headline,
+            message: draft.description
+          },
+          maxCpc: draft.bidAmount,
+          dailyBudget: draft.dailyBudget
+        }
+      });
+      setActiveStep("review");
+      return;
+    }
+
     setIsLaunching(true);
-    setLaunchState({ status: "idle", message: "Submitting campaign to TrafficHaus..." });
+    setLaunchState({ status: "idle", message: "Submitting click campaign to connected partner routes..." });
 
     try {
       const response = await fetch("/api/traffichaus/create-campaign", {
@@ -240,7 +285,7 @@ export function CampaignWizard() {
             <div className="hidden items-center gap-2 md:flex">
               <Badge className="gap-2 bg-white/10 text-white ring-1 ring-white/15">
                 <Globe2 className="h-4 w-4 text-[#73ddff]" />
-                TrafficHaus
+                Partner routing
               </Badge>
               <Badge className={validation.valid ? "bg-[#7ff083] text-black" : "bg-white/10 text-white"}>
                 {validation.valid ? "Ready" : `${validation.errors.length} fields`}
@@ -256,7 +301,7 @@ export function CampaignWizard() {
             onClick={applyPrompt}
           >
             <Sparkles className="h-5 w-5 text-white" />
-            <span className="truncate px-4">Generate creatives and campaigns with AI</span>
+            <span className="truncate px-4">Enter a product URL. We generate the ads.</span>
             <Send className="h-5 w-5 text-white" />
           </button>
 
@@ -266,7 +311,7 @@ export function CampaignWizard() {
             <span className="block">campaign generation tool</span>
           </h1>
           <p className="mt-6 max-w-3xl text-2xl font-light leading-tight text-white/60 sm:text-4xl">
-            <span className="text-[#3b71ff]">where</span> creative concepts, targeting, bids, and launches happen from one prompt
+            <span className="text-[#3b71ff]">where</span> a product URL becomes ads, targeting, and paid clicks
           </p>
 
           <button
@@ -294,7 +339,7 @@ export function CampaignWizard() {
               <textarea
                 className="min-h-10 flex-1 resize-none bg-transparent py-2 text-lg leading-7 outline-none placeholder:text-slate-400 sm:min-h-12"
                 value={prompt}
-                placeholder="Ask CPC to generate creatives, targeting, and launch settings..."
+                placeholder="Paste a product URL and tell us restrictions, max CPC, and approval preference..."
                 onChange={(event) => setPrompt(event.target.value)}
               />
               <button
@@ -316,7 +361,7 @@ export function CampaignWizard() {
             </div>
 
             <div className="mt-4 flex flex-wrap items-center gap-2">
-              <PromptChip icon={<Wand2 className="h-4 w-4" />} label="Generate creatives" onClick={() => applyQuickAction("creative")} />
+              <PromptChip icon={<Wand2 className="h-4 w-4" />} label="Generate ads" onClick={() => applyQuickAction("creative")} />
               <PromptChip icon={<Search className="h-4 w-4" />} label="Find targeting" onClick={() => applyQuickAction("targeting")} />
               <PromptChip icon={<CircleDollarSign className="h-4 w-4" />} label="Budget test" onClick={() => applyQuickAction("budget")} />
               <button
@@ -324,7 +369,7 @@ export function CampaignWizard() {
                 type="button"
                 onClick={() => setActiveStep("review")}
               >
-                Payload preview
+                Review run plan
               </button>
             </div>
           </div>
@@ -405,7 +450,11 @@ export function CampaignWizard() {
                   onClick={launchCampaign}
                 >
                   <Rocket className="h-4 w-4" />
-                  {isLaunching ? "Submitting..." : "Launch Campaign"}
+                  {isLaunching
+                    ? "Submitting..."
+                    : draft.customerApprovalMode === "review_first"
+                      ? "Generate Approval Packet"
+                      : "Run Click Campaign"}
                 </Button>
               ) : (
                 <Button className="px-5" type="button" onClick={goNext}>
@@ -422,11 +471,11 @@ export function CampaignWizard() {
                 <ShieldCheck className="h-5 w-5 text-brand-blue" />
                 <div>
                   <p className="text-xs font-extrabold uppercase text-brand-green">Protected launch path</p>
-                  <h2 className="text-base font-extrabold">Server-side TrafficHaus calls</h2>
+                  <h2 className="text-base font-extrabold">Server-side partner calls</h2>
                 </div>
               </div>
               <p className="mt-3 text-sm leading-6 text-muted">
-                API key stays in Next.js route handlers. The browser only sends the draft campaign.
+                API keys stay in Next.js route handlers. The browser only sends the draft campaign.
               </p>
             </section>
 
@@ -437,11 +486,12 @@ export function CampaignWizard() {
                 <ContextRow label="Geo" value={payload.geo || "Missing"} />
                 <ContextRow label="Devices" value={payload.device_type || "Missing"} />
                 <ContextRow label="Bid" value={`${payload.bid_type.toUpperCase()} $${payload.bid_amount || "0"}`} />
+                <ContextRow label="Partners" value={`${draft.partnerChannels.length} selected`} />
               </div>
             </section>
 
             <AIAssistantPanel draft={draft} updateDraft={updateDraft} />
-            <CampaignSummary payload={payload} validation={validation} />
+            <CampaignSummary draft={draft} payload={payload} validation={validation} />
           </aside>
         </section>
       </div>

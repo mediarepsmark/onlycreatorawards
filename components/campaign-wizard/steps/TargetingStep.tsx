@@ -18,7 +18,7 @@ export function TargetingStep({ draft, updateDraft }: CampaignStepProps) {
           onChange={(value) => updateDraft({ geoTargets: value })}
         />
         <CsvField
-          label="Language targets"
+          label="Language restrictions"
           value={draft.languageTargets}
           onChange={(value) => updateDraft({ languageTargets: value })}
         />
@@ -61,14 +61,14 @@ export function TargetingStep({ draft, updateDraft }: CampaignStepProps) {
           onChange={(value) => updateDraft({ carriers: value })}
         />
         <CsvField
-          label="Zone targeting"
+          label="Traffic source restrictions"
           value={draft.zoneTargeting}
           onChange={(value) => updateDraft({ zoneTargeting: value })}
         />
       </div>
 
       <CsvField
-        label="Keywords"
+        label="Buyer intent keywords"
         value={draft.keywords}
         textarea
         onChange={(value) => updateDraft({ keywords: value })}

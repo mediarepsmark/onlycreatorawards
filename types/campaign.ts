@@ -13,6 +13,17 @@ export type CampaignWizardStep =
   | "creative"
   | "review";
 
+export type CustomerApprovalMode = "auto_run" | "review_first";
+
+export type PartnerChannel =
+  | "google"
+  | "instagram"
+  | "snapchat"
+  | "outbrain"
+  | "taboola"
+  | "nativo"
+  | "traffichaus";
+
 export interface CampaignDraft {
   campaignName: string;
   objective: CampaignObjective;
@@ -20,6 +31,8 @@ export interface CampaignDraft {
   offerDescription: string;
   landingPageUrl: string;
   displayUrl: string;
+  restrictions: string;
+  customerApprovalMode: CustomerApprovalMode;
   geoTargets: string[];
   deviceTargets: string[];
   languageTargets: string[];
@@ -28,6 +41,7 @@ export interface CampaignDraft {
   carriers: string[];
   keywords: string[];
   zoneTargeting: string[];
+  partnerChannels: PartnerChannel[];
   siteTargeting: string;
   adLocation: string;
   adType: string;

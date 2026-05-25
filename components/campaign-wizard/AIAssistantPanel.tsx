@@ -7,21 +7,23 @@ import type { CampaignStepProps } from "@/types/campaign";
 export function AIAssistantPanel({ draft, updateDraft }: CampaignStepProps) {
   const applyCreativeSuggestion = () => {
     updateDraft({
-      headline: `${draft.campaignName.replace(/\s+-\s+.*/, "")}: faster campaign launch`,
+      creativeUrl: "https://app.cpcadvertising.com/brand/cpcadvertising-logo.png",
+      headline: `Get qualified clicks to ${draft.displayUrl || "your product"}`,
       description:
-        "Plan, target, and submit native campaigns with a TrafficHaus-ready payload built from your brief.",
+        "CPCAdvertising.com generates the ads, applies your restrictions, and drives paid clicks to the product URL.",
       keywords: Array.from(
-        new Set([...draft.keywords, "buyer intent", "campaign automation", "native demand"])
-      )
+        new Set([...draft.keywords, "buyer intent", "product clicks", "campaign automation"])
+      ),
+      partnerChannels: ["google", "instagram", "snapchat", "outbrain", "taboola", "nativo", "traffichaus"]
     });
   };
 
   const applyBudgetSuggestion = () => {
     updateDraft({
-      bidType: "cpm",
-      bidAmount: "1.30",
-      dailyBudget: "100",
-      totalBudget: "1000",
+      bidType: "cpc",
+      bidAmount: "0.25",
+      dailyBudget: "50",
+      totalBudget: "250",
       frequencyCapType: "site",
       frequencyCapValue: 2
     });
@@ -50,7 +52,7 @@ export function AIAssistantPanel({ draft, updateDraft }: CampaignStepProps) {
             Sharpen creative
           </span>
           <span className="mt-2 block text-sm leading-6 text-muted">
-            Headline, description, and intent keywords tuned for native placements.
+            Generate CPCAdvertising-owned ad copy for the product URL.
           </span>
         </button>
 
@@ -64,7 +66,7 @@ export function AIAssistantPanel({ draft, updateDraft }: CampaignStepProps) {
             Reset launch budget
           </span>
           <span className="mt-2 block text-sm leading-6 text-muted">
-            CPM bid, daily budget, total budget, and frequency cap for a first test.
+            Max CPC, daily click budget, total click budget, and frequency cap for a first test.
           </span>
         </button>
       </div>

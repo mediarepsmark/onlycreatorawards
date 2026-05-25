@@ -1,12 +1,15 @@
 import type { CampaignDraft, TrafficHausPayload, ValidationResult } from "@/types/campaign";
 
 export const defaultCampaignDraft: CampaignDraft = {
-  campaignName: "CPC Advertising - Native Buyer Intent",
-  objective: "conversions",
+  campaignName: "CPCAdvertising.com - AI Click Campaign",
+  objective: "traffic",
   isNsfw: false,
-  offerDescription: "AI-assisted campaign setup for performance advertisers.",
-  landingPageUrl: "https://cpcadvertising.com",
-  displayUrl: "cpcadvertising.com",
+  offerDescription:
+    "Customer provides a product URL, CPCAdvertising.com generates the ads and drives paid clicks.",
+  landingPageUrl: "https://app.cpcadvertising.com/campaigns/new",
+  displayUrl: "app.cpcadvertising.com",
+  restrictions: "Avoid misleading claims, prohibited categories, and unsupported guarantees.",
+  customerApprovalMode: "auto_run",
   geoTargets: ["united states"],
   deviceTargets: ["desktop", "mobile", "tablet"],
   languageTargets: ["english"],
@@ -15,19 +18,20 @@ export const defaultCampaignDraft: CampaignDraft = {
   carriers: [],
   keywords: ["performance marketing", "native advertising", "paid traffic"],
   zoneTargeting: [],
+  partnerChannels: ["google", "instagram", "snapchat", "outbrain", "taboola", "nativo", "traffichaus"],
   siteTargeting: "Run-of-Network",
   adLocation: "Native",
   adType: "Native Model Widget",
   creativeType: "banners",
   frequencyCapType: "site",
   frequencyCapValue: 2,
-  bidType: "cpm",
-  bidAmount: "1.30",
-  dailyBudget: "100",
-  totalBudget: "1000",
-  creativeUrl: "",
-  headline: "Launch smarter paid traffic in minutes",
-  description: "Generate TrafficHaus-ready campaigns with targeting, budgets, and native creative in one workflow."
+  bidType: "cpc",
+  bidAmount: "0.25",
+  dailyBudget: "50",
+  totalBudget: "250",
+  creativeUrl: "https://app.cpcadvertising.com/brand/cpcadvertising-logo.png",
+  headline: "Get qualified clicks without building ads yourself",
+  description: "Share your product URL and CPCAdvertising.com generates ads, targets buyers, and drives clicks."
 };
 
 const joinCsv = (items: string[]) =>

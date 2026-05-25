@@ -8,9 +8,18 @@ const bidTypeOptions = ["cpm", "cpc"];
 export function BudgetStep({ draft, updateDraft }: CampaignStepProps) {
   return (
     <div className="grid gap-5">
+      <section className="rounded-lg border border-emerald-200 bg-emerald-50 p-4">
+        <p className="text-xs font-extrabold uppercase text-brand-green">Customer chooses the click price</p>
+        <h3 className="mt-1 text-lg font-extrabold">Set the max CPC and click budget</h3>
+        <p className="mt-2 text-sm leading-6 text-muted">
+          CPCAdvertising.com generates and runs the ads, then optimizes partner placements around the amount
+          the customer is willing to pay for each click.
+        </p>
+      </section>
+
       <div className="grid gap-4 sm:grid-cols-2">
         <label className="grid gap-2">
-          <span className="text-sm font-extrabold uppercase text-muted">Bid type</span>
+          <span className="text-sm font-extrabold uppercase text-muted">Pricing model</span>
           <select
             className="min-h-11 rounded-lg border border-line bg-white px-3 outline-none focus:border-brand-green focus:ring-4 focus:ring-emerald-100"
             value={draft.bidType}
@@ -25,7 +34,7 @@ export function BudgetStep({ draft, updateDraft }: CampaignStepProps) {
         </label>
 
         <CurrencyField
-          label="Bid amount"
+          label={draft.bidType === "cpc" ? "Max cost per click" : "Bid amount"}
           value={draft.bidAmount}
           onChange={(value) => updateDraft({ bidAmount: value })}
         />
@@ -33,12 +42,12 @@ export function BudgetStep({ draft, updateDraft }: CampaignStepProps) {
 
       <div className="grid gap-4 sm:grid-cols-2">
         <CurrencyField
-          label="Daily budget"
+          label="Daily click budget"
           value={draft.dailyBudget}
           onChange={(value) => updateDraft({ dailyBudget: value })}
         />
         <CurrencyField
-          label="Total budget"
+          label="Total click budget"
           value={draft.totalBudget}
           onChange={(value) => updateDraft({ totalBudget: value })}
         />

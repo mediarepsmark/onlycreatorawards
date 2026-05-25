@@ -2,14 +2,15 @@
 
 import { CheckCircle2, TriangleAlert } from "lucide-react";
 
-import type { TrafficHausPayload, ValidationResult } from "@/types/campaign";
+import type { CampaignDraft, TrafficHausPayload, ValidationResult } from "@/types/campaign";
 
 interface CampaignSummaryProps {
+  draft: CampaignDraft;
   payload: TrafficHausPayload;
   validation: ValidationResult;
 }
 
-export function CampaignSummary({ payload, validation }: CampaignSummaryProps) {
+export function CampaignSummary({ draft, payload, validation }: CampaignSummaryProps) {
   return (
     <section className="rounded-lg border border-slate-200 bg-white/85 p-4 shadow-sm backdrop-blur">
       <div className="flex items-center justify-between gap-3">
@@ -41,14 +42,26 @@ export function CampaignSummary({ payload, validation }: CampaignSummaryProps) {
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div className="rounded-lg bg-slate-50 p-3">
-            <dt className="font-bold text-muted">Bid</dt>
+            <dt className="font-bold text-muted">Max CPC</dt>
             <dd className="mt-1 font-semibold text-ink">
-              {payload.bid_type.toUpperCase()} ${payload.bid_amount || "0"}
+              ${payload.bid_amount || "0"}
             </dd>
           </div>
           <div className="rounded-lg bg-slate-50 p-3">
             <dt className="font-bold text-muted">Daily</dt>
             <dd className="mt-1 font-semibold text-ink">${payload.daily_budget || "0"}</dd>
+          </div>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <div className="rounded-lg bg-slate-50 p-3">
+            <dt className="font-bold text-muted">Approval</dt>
+            <dd className="mt-1 font-semibold text-ink">
+              {draft.customerApprovalMode === "review_first" ? "Review first" : "Auto-run"}
+            </dd>
+          </div>
+          <div className="rounded-lg bg-slate-50 p-3">
+            <dt className="font-bold text-muted">Partners</dt>
+            <dd className="mt-1 font-semibold text-ink">{draft.partnerChannels.length}</dd>
           </div>
         </div>
       </dl>
