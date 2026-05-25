@@ -7,7 +7,7 @@ import type {
 } from "@/types/campaign";
 
 const getTrafficHausBaseUrl = () =>
-  (process.env.TRAFFICHAUS_API_BASE_URL || "http://admin.traffichaus.com/api/v1").replace(/\/$/, "");
+  (process.env.TRAFFICHAUS_API_BASE_URL || "https://admin.traffichaus.com/api/v1").replace(/\/$/, "");
 
 const isMockMode = () => process.env.NEXT_PUBLIC_MOCK_TRAFFICHAUS !== "false";
 
@@ -54,7 +54,8 @@ export const createTrafficHausCampaign = async (
   }
 
   const url = new URL(`${getTrafficHausBaseUrl()}/v1.php`);
-  url.searchParams.set("api_key", apiKey);
+  // TrafficHaus campaign creation currently authenticates with `key`; stats uses `api_key`.
+  url.searchParams.set("key", apiKey);
 
   const response = await fetch(url, {
     method: "POST",
@@ -69,6 +70,19 @@ export const createTrafficHausCampaign = async (
 
   if (!response.ok) {
     throw new Error(`TrafficHaus campaign creation failed with status ${response.status}.`);
+  }
+
+  if (
+    data &&
+    typeof data === "object" &&
+    "success" in data &&
+    String((data as { success: unknown }).success) === "0"
+  ) {
+    const message =
+      "message" in data && typeof (data as { message?: unknown }).message === "string"
+        ? (data as { message: string }).message
+        : "TrafficHaus rejected the campaign creation request.";
+    throw new Error(`TrafficHaus campaign creation rejected: ${message}`);
   }
 
   return {
