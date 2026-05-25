@@ -62,7 +62,7 @@ export function CampaignWizard() {
   const [draft, setDraft] = useState<CampaignDraft>(defaultCampaignDraft);
   const [activeStep, setActiveStep] = useState<CampaignWizardStep>("objective");
   const [prompt, setPrompt] = useState(
-    "Launch a native campaign for CPC Advertising targeting US advertisers who want faster campaign setup."
+    "Generate creatives, targeting, budget, and a TrafficHaus-ready native campaign for CPC Advertising."
   );
   const [isLaunching, setIsLaunching] = useState(false);
   const [launchState, setLaunchState] = useState<LaunchState>({
@@ -227,7 +227,7 @@ export function CampaignWizard() {
               </span>
               <span>
                 <strong className="block text-sm text-white">CPCAdvertising.com</strong>
-                <span className="block text-xs text-white/55">Campaign automation</span>
+                <span className="block text-xs text-white/55">AI creatives + campaigns</span>
               </span>
             </a>
 
@@ -250,15 +250,17 @@ export function CampaignWizard() {
             onClick={applyPrompt}
           >
             <Sparkles className="h-5 w-5 text-white" />
-            <span className="truncate px-4">How should we launch this campaign?</span>
+            <span className="truncate px-4">Generate creatives and campaigns with AI</span>
             <Send className="h-5 w-5 text-white" />
           </button>
 
-          <h1 className="mt-10 text-5xl font-light leading-none text-white sm:text-7xl lg:text-[7rem]">
-            Campaign automation
+          <h1 className="mt-10 max-w-5xl text-4xl font-light leading-tight text-white sm:text-6xl lg:text-[5.8rem]">
+            <span className="block">1st-ever fully AI-driven</span>
+            <span className="block">creatives and advertising</span>
+            <span className="block">campaign generation tool</span>
           </h1>
-          <p className="mt-6 max-w-3xl text-3xl font-light leading-tight text-white/60 sm:text-5xl">
-            <span className="text-[#3b71ff]">where</span> media buys become launch-ready
+          <p className="mt-6 max-w-3xl text-2xl font-light leading-tight text-white/60 sm:text-4xl">
+            <span className="text-[#3b71ff]">where</span> creative concepts, targeting, bids, and launches happen from one prompt
           </p>
 
           <button
@@ -266,7 +268,7 @@ export function CampaignWizard() {
             type="button"
             onClick={() => setActiveStep("review")}
           >
-            Review TrafficHaus launch
+            Start AI campaign build
           </button>
         </div>
       </section>
@@ -286,7 +288,7 @@ export function CampaignWizard() {
               <textarea
                 className="min-h-10 flex-1 resize-none bg-transparent py-2 text-lg leading-7 outline-none placeholder:text-slate-400 sm:min-h-12"
                 value={prompt}
-                placeholder="Ask CPC to build a campaign..."
+                placeholder="Ask CPC to generate creatives, targeting, and launch settings..."
                 onChange={(event) => setPrompt(event.target.value)}
               />
               <button
@@ -308,7 +310,7 @@ export function CampaignWizard() {
             </div>
 
             <div className="mt-4 flex flex-wrap items-center gap-2">
-              <PromptChip icon={<Wand2 className="h-4 w-4" />} label="Creative angles" onClick={() => applyQuickAction("creative")} />
+              <PromptChip icon={<Wand2 className="h-4 w-4" />} label="Generate creatives" onClick={() => applyQuickAction("creative")} />
               <PromptChip icon={<Search className="h-4 w-4" />} label="Find targeting" onClick={() => applyQuickAction("targeting")} />
               <PromptChip icon={<CircleDollarSign className="h-4 w-4" />} label="Budget test" onClick={() => applyQuickAction("budget")} />
               <button
