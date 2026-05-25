@@ -28,20 +28,20 @@ export function AIAssistantPanel({ draft, updateDraft }: CampaignStepProps) {
   };
 
   return (
-    <section className="rounded-lg border border-line bg-white/90 p-4 shadow-panel">
+    <section className="rounded-lg border border-slate-200 bg-white/85 p-4 shadow-sm backdrop-blur">
       <div className="flex items-center gap-2">
-        <span className="grid h-9 w-9 place-items-center rounded-lg bg-emerald-50 text-brand-green">
+        <span className="grid h-10 w-10 place-items-center rounded-full bg-[#eef6ff] text-brand-blue">
           <Sparkles className="h-5 w-5" />
         </span>
         <div>
-          <p className="text-xs font-extrabold uppercase text-brand-green">AI assistant</p>
-          <h2 className="text-base font-extrabold">Campaign polish</h2>
+          <p className="text-xs font-extrabold uppercase text-brand-green">Copilot</p>
+          <h2 className="text-base font-extrabold">Next best moves</h2>
         </div>
       </div>
 
       <div className="mt-4 grid gap-3">
         <button
-          className="rounded-lg border border-line bg-slate-50 p-3 text-left transition hover:border-emerald-200 hover:bg-emerald-50"
+          className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-left transition hover:border-brand-blue/30 hover:bg-[#eef6ff]"
           type="button"
           onClick={applyCreativeSuggestion}
         >
@@ -55,7 +55,7 @@ export function AIAssistantPanel({ draft, updateDraft }: CampaignStepProps) {
         </button>
 
         <button
-          className="rounded-lg border border-line bg-slate-50 p-3 text-left transition hover:border-emerald-200 hover:bg-emerald-50"
+          className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-left transition hover:border-brand-green/30 hover:bg-emerald-50"
           type="button"
           onClick={applyBudgetSuggestion}
         >

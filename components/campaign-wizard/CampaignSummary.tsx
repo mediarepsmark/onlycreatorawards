@@ -11,11 +11,11 @@ interface CampaignSummaryProps {
 
 export function CampaignSummary({ payload, validation }: CampaignSummaryProps) {
   return (
-    <section className="rounded-lg border border-line bg-white/90 p-4 shadow-panel">
+    <section className="rounded-lg border border-slate-200 bg-white/85 p-4 shadow-sm backdrop-blur">
       <div className="flex items-center justify-between gap-3">
         <div>
           <p className="text-xs font-extrabold uppercase text-brand-green">Summary</p>
-          <h2 className="text-base font-extrabold">TrafficHaus payload</h2>
+          <h2 className="text-base font-extrabold">Launch readiness</h2>
         </div>
         {validation.valid ? (
           <CheckCircle2 className="h-5 w-5 text-brand-green" />
