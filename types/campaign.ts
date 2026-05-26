@@ -24,15 +24,32 @@ export type PartnerChannel =
   | "nativo"
   | "traffichaus";
 
+export interface ExtractedProduct {
+  sourceUrl: string;
+  title: string;
+  description: string;
+  imageUrl: string;
+  siteName: string;
+}
+
 export interface CampaignDraft {
   campaignName: string;
   objective: CampaignObjective;
   isNsfw: boolean;
+  productSourceUrl: string;
+  productName: string;
+  extractedProduct: ExtractedProduct;
   offerDescription: string;
   landingPageUrl: string;
   displayUrl: string;
   restrictions: string;
   customerApprovalMode: CustomerApprovalMode;
+  targetCustomer: string;
+  keyBenefit: string;
+  brandTone: string;
+  visualDirection: string;
+  offerAngle: string;
+  callToAction: string;
   geoTargets: string[];
   deviceTargets: string[];
   languageTargets: string[];

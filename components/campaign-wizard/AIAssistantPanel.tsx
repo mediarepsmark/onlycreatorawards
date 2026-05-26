@@ -11,6 +11,12 @@ export function AIAssistantPanel({ draft, updateDraft }: CampaignStepProps) {
       headline: `Get qualified clicks to ${draft.displayUrl || "your product"}`,
       description:
         "CPCAdvertising.com generates the ads, applies your restrictions, and drives paid clicks to the product URL.",
+      targetCustomer: draft.targetCustomer || "People with intent to compare, click, and evaluate the product.",
+      keyBenefit: draft.keyBenefit || "A clear product reason to click now.",
+      brandTone: draft.brandTone || "Direct, credible, and performance-focused.",
+      visualDirection: draft.visualDirection || "Product-first layout with a bold headline, visible proof point, and clear click cue.",
+      offerAngle: draft.offerAngle || "Make the next click feel useful and low-friction.",
+      callToAction: draft.callToAction || "See the product",
       keywords: Array.from(
         new Set([...draft.keywords, "buyer intent", "product clicks", "campaign automation"])
       ),

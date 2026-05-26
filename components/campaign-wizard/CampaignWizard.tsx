@@ -107,6 +107,8 @@ export function CampaignWizard() {
 
     updateDraft({
       campaignName: `${product} - AI Click Campaign`,
+      productSourceUrl: productUrl,
+      productName: product,
       offerDescription: cleanPrompt,
       landingPageUrl: productUrl,
       displayUrl,
@@ -116,6 +118,10 @@ export function CampaignWizard() {
       headline: `Get qualified clicks to ${product}`,
       description:
         "CPCAdvertising.com generates ads, applies restrictions, and drives paid clicks to the product page.",
+      targetCustomer: "People likely to click through and evaluate the product.",
+      keyBenefit: `A simple path to discover ${product}.`,
+      offerAngle: cleanPrompt,
+      callToAction: "See the product",
       keywords: Array.from(
         new Set([...draft.keywords, "product clicks", "buyer intent", "performance advertising"])
       )
@@ -183,6 +189,16 @@ export function CampaignWizard() {
             asset: draft.creativeUrl,
             headline: draft.headline,
             message: draft.description
+          },
+          creativeBrief: {
+            productName: draft.productName,
+            sourceUrl: draft.productSourceUrl,
+            targetCustomer: draft.targetCustomer,
+            keyBenefit: draft.keyBenefit,
+            brandTone: draft.brandTone,
+            visualDirection: draft.visualDirection,
+            offerAngle: draft.offerAngle,
+            callToAction: draft.callToAction
           },
           maxCpc: draft.bidAmount,
           dailyBudget: draft.dailyBudget

@@ -175,6 +175,7 @@ export function ReviewLaunchStep({
         <p className="text-xs font-extrabold uppercase text-brand-green">CPCAdvertising run plan</p>
         <div className="mt-3 grid gap-3 sm:grid-cols-2">
           <InfoTile label="Product URL" value={draft.landingPageUrl || "Missing"} />
+          <InfoTile label="Product" value={draft.productName || "Missing"} />
           <InfoTile label="Max CPC" value={`$${draft.bidAmount || "0"}`} />
           <InfoTile
             label="Approval"
