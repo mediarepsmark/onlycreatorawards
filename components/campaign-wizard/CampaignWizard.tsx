@@ -281,28 +281,28 @@ export function CampaignWizard() {
         <div className="absolute left-1/2 top-28 h-px w-[52rem] -translate-x-1/2 bg-gradient-to-r from-transparent via-[#7df08a] to-transparent opacity-80 shadow-[0_0_36px_rgba(125,240,138,0.8)]" />
         <div className="absolute left-1/2 top-44 h-px w-[38rem] -translate-x-1/2 bg-gradient-to-r from-transparent via-[#3b71ff] to-transparent opacity-70 shadow-[0_0_42px_rgba(59,113,255,0.9)]" />
 
-        <header className="relative z-10 px-4 py-4 sm:px-6">
-          <div className="mx-auto flex max-w-6xl items-center justify-between gap-4">
+        <header className="relative z-10 border-b border-white/10 bg-black/70 px-4 py-5 shadow-[0_18px_60px_rgba(0,0,0,0.65)] backdrop-blur sm:px-6">
+          <div className="mx-auto flex max-w-6xl flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <a
-              className="inline-flex min-w-0 items-center gap-3 rounded-lg border border-white/10 bg-black/85 px-3 py-2 shadow-[0_0_32px_rgba(115,221,255,0.18)] backdrop-blur transition hover:border-white/20 sm:gap-4 sm:px-4 sm:py-3"
+              className="inline-flex min-w-0 items-center gap-4 rounded-lg border border-white/15 bg-[#030808] px-4 py-3 shadow-[0_0_46px_rgba(115,221,255,0.22)] transition hover:border-white/25 sm:gap-5 sm:px-5"
               href="/campaigns/new"
               aria-label="CPCAdvertising.com"
             >
               <Image
                 alt=""
-                className="h-16 w-16 shrink-0 rounded-lg object-cover shadow-[0_0_24px_rgba(59,113,255,0.22)] sm:h-20 sm:w-20 lg:h-24 lg:w-24"
+                className="h-20 w-20 shrink-0 rounded-lg object-cover shadow-[0_0_30px_rgba(59,113,255,0.32)] sm:h-24 sm:w-24 lg:h-28 lg:w-28"
                 height={512}
                 priority
                 src="/brand/cpcadvertising-favicon.png"
                 width={512}
               />
               <span className="min-w-0">
-                <span className="block truncate text-2xl font-black tracking-normal sm:text-4xl lg:text-5xl">
+                <span className="block truncate text-3xl font-black tracking-normal sm:text-5xl lg:text-6xl">
                   <span className="text-white">CPC</span>
                   <span className="text-[#73ddff]">advertising</span>
                   <span className="text-white/65">.com</span>
                 </span>
-                <span className="mt-1 hidden text-xs font-extrabold uppercase tracking-normal text-[#7ff083] sm:block">
+                <span className="mt-1 hidden text-sm font-extrabold uppercase tracking-normal text-[#7ff083] sm:block">
                   AI click campaign platform
                 </span>
               </span>
