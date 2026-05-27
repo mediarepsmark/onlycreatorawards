@@ -293,7 +293,7 @@ export function CampaignWizard() {
                 className="h-28 w-auto max-w-full object-contain sm:h-32 lg:h-36"
                 height={298}
                 priority
-                src="/brand/cpcadvertising-logo-transparent.png"
+                src="/brand/cpcadvertising-logo-black.png"
                 width={640}
               />
             </a>
