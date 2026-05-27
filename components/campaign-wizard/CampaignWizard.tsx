@@ -284,28 +284,18 @@ export function CampaignWizard() {
         <header className="relative z-10 border-b border-white/10 bg-black/70 px-4 py-5 shadow-[0_18px_60px_rgba(0,0,0,0.65)] backdrop-blur sm:px-6">
           <div className="mx-auto flex max-w-6xl flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <a
-              className="inline-flex min-w-0 items-center gap-4 rounded-lg border border-white/15 bg-[#030808] px-4 py-3 shadow-[0_0_46px_rgba(59,113,255,0.28)] transition hover:border-white/25 sm:gap-5 sm:px-5"
+              className="inline-flex min-w-0 rounded-lg border border-white/15 bg-[#030808] p-3 shadow-[0_0_46px_rgba(59,113,255,0.28)] transition hover:border-white/25 sm:p-4"
               href="/campaigns/new"
               aria-label="CPCAdvertising.com"
             >
               <Image
-                alt=""
-                className="h-20 w-20 shrink-0 rounded-lg object-cover shadow-[0_0_30px_rgba(59,113,255,0.32)] sm:h-24 sm:w-24 lg:h-28 lg:w-28"
-                height={512}
+                alt="CPCAdvertising.com"
+                className="h-28 w-auto max-w-full object-contain sm:h-32 lg:h-36"
+                height={298}
                 priority
-                src="/brand/cpcadvertising-favicon.png"
-                width={512}
+                src="/brand/cpcadvertising-logo-transparent.png"
+                width={640}
               />
-              <span className="min-w-0">
-                <span className="block truncate text-3xl font-black tracking-normal sm:text-5xl lg:text-6xl">
-                  <span className="text-white">CPC</span>
-                  <span className="text-[#3b71ff]">advertising</span>
-                  <span className="text-white/65">.com</span>
-                </span>
-                <span className="mt-1 hidden text-sm font-extrabold uppercase tracking-normal text-[#7ff083] sm:block">
-                  AI click campaign platform
-                </span>
-              </span>
             </a>
 
             <div className="hidden items-center gap-2 md:flex">
