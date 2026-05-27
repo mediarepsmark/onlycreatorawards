@@ -20,7 +20,7 @@ const partnerOptions: Array<{
 ];
 
 // TODO: Confirm exact TrafficHaus enum values from the advertiser account UI.
-const adLocationOptions = ["Native", "Banner", "Pop", "Video"];
+const adLocationOptions = ["Native", "Banner", "Pop Under", "Video"];
 
 // TODO: Confirm exact TrafficHaus enum values from the advertiser account UI.
 const adTypeOptions = ["Native Model Widget", "Native Banner", "Display Banner", "Video Pre-Roll"];
