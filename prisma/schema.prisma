@@ -1,0 +1,524 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  USER
+  CREATOR
+  MODERATOR
+  ADMIN
+}
+
+enum CreatorStatus {
+  DRAFT
+  PUBLISHED
+  NOINDEX
+  REMOVED
+}
+
+enum LocationVisibility {
+  HIDDEN
+  COUNTRY
+  REGION
+  CITY
+}
+
+enum CreatorPrimaryPlatform {
+  ONLYFANS
+  FANSLY
+  PATREON
+  MANYVIDS
+  INSTAGRAM
+  TIKTOK
+  TWITCH
+  YOUTUBE
+  WEBSITE
+  OTHER
+}
+
+enum CategoryType {
+  ATTRIBUTE
+  NICHE
+  PLATFORM
+  SOCIAL
+  LOCATION
+  AWARD
+}
+
+enum CategorySource {
+  ADMIN
+  CREATOR_SUBMITTED
+  IMPORTED
+  USER_SUGGESTED
+}
+
+enum AwardStatus {
+  UPCOMING
+  NOMINATIONS_OPEN
+  VOTING_OPEN
+  CLOSED
+  WINNERS_ANNOUNCED
+}
+
+enum NominationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  WINNER
+  FINALIST
+}
+
+enum VoteType {
+  CREATOR_STAR
+  AWARD_VOTE
+  UPVOTE
+  FAN_FAVORITE
+  CATEGORY_VOTE
+  RISING_STAR
+}
+
+enum CommentStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  SPAM
+  REMOVED
+}
+
+enum ClaimStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum VerificationMethod {
+  SOCIAL_LINK
+  EMAIL
+  MANUAL
+  PLATFORM_MESSAGE
+}
+
+enum RankingPageType {
+  TOP_LIST
+  CATEGORY
+  GEO
+  SOCIAL
+  AWARD
+  TRENDING
+}
+
+enum ReportStatus {
+  OPEN
+  REVIEWING
+  RESOLVED
+  DISMISSED
+}
+
+enum RewardCampaignStatus {
+  DRAFT
+  ACTIVE
+  CLOSED
+  FULFILLING
+  COMPLETED
+  CANCELLED
+}
+
+enum AgeVerificationStatus {
+  NOT_REQUIRED
+  PENDING
+  VERIFIED
+  FAILED
+  EXPIRED
+}
+
+enum FulfillmentStatus {
+  PENDING
+  APPROVED
+  FULFILLED
+  REJECTED
+  CANCELLED
+}
+
+enum TaxStatus {
+  NOT_REQUIRED
+  PENDING
+  COLLECTED
+}
+
+model User {
+  id                  String               @id @default(cuid())
+  email               String               @unique
+  username            String               @unique
+  displayName         String
+  passwordHash        String?
+  authProviderId      String?              @unique
+  avatarUrl           String?
+  role                UserRole             @default(USER)
+  isEmailVerified     Boolean              @default(false)
+  isBanned            Boolean              @default(false)
+  trustScore          Int                  @default(50)
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+  claimedCreators     Creator[]            @relation("CreatorClaimOwner")
+  nominations         AwardNomination[]
+  votes               Vote[]
+  comments            Comment[]
+  creatorClaims       CreatorClaim[]
+  reports             ModerationReport[]
+  fanRewardScores     FanRewardScore[]
+  rewardWins          RewardWinner[]
+  ageVerifications    AgeVerification[]
+}
+
+model Creator {
+  id                  String               @id @default(cuid())
+  slug                String               @unique
+  displayName         String
+  handle              String?
+  bio                 String?
+  profileImageUrl     String?
+  bannerImageUrl      String?
+  primaryPlatform     CreatorPrimaryPlatform
+  onlyfansUrl         String?
+  fanslyUrl           String?
+  patreonUrl          String?
+  manyvidsUrl         String?
+  websiteUrl          String?
+  instagramUrl        String?
+  tiktokUrl           String?
+  xUrl                String?
+  twitchUrl           String?
+  youtubeUrl          String?
+  country             String?
+  region              String?
+  city                String?
+  locationVisibility  LocationVisibility   @default(COUNTRY)
+  isClaimed           Boolean              @default(false)
+  claimedByUserId     String?
+  claimedByUser       User?                @relation("CreatorClaimOwner", fields: [claimedByUserId], references: [id])
+  isVerified          Boolean              @default(false)
+  isIndexable         Boolean              @default(false)
+  indexQualityScore   Int                  @default(0)
+  creatorStarsScore   Int                  @default(0)
+  totalVotes          Int                  @default(0)
+  totalComments       Int                  @default(0)
+  status              CreatorStatus        @default(DRAFT)
+  lastDataRefreshAt   DateTime?
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+  categories          CreatorCategory[]
+  nominations         AwardNomination[]
+  votes               Vote[]
+  comments            Comment[]
+  claims              CreatorClaim[]
+  rankingEntries      RankingEntry[]
+  reports             ModerationReport[]
+  rewardOptIns        ParticipatingCreatorRewardOptIn[]
+  rewardSelections    RewardWinner[]
+
+  @@index([status, isIndexable])
+  @@index([creatorStarsScore])
+  @@index([primaryPlatform])
+  @@index([country, region, city])
+}
+
+model Category {
+  id                  String               @id @default(cuid())
+  slug                String               @unique
+  name                String
+  description         String?
+  type                CategoryType
+  isSensitive         Boolean              @default(false)
+  isIndexable         Boolean              @default(false)
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+  creators            CreatorCategory[]
+  awards              Award[]
+
+  @@index([type, isIndexable])
+}
+
+model CreatorCategory {
+  creatorId           String
+  categoryId          String
+  source              CategorySource       @default(ADMIN)
+  confidenceScore     Int                  @default(100)
+  approvedAt          DateTime?
+  creator             Creator              @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  category            Category             @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@id([creatorId, categoryId])
+}
+
+model Award {
+  id                  String               @id @default(cuid())
+  year                Int
+  slug                String
+  title               String
+  description         String
+  categoryId          String?
+  status              AwardStatus          @default(UPCOMING)
+  votingStartsAt      DateTime?
+  votingEndsAt        DateTime?
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+  category            Category?            @relation(fields: [categoryId], references: [id])
+  nominations         AwardNomination[]
+  votes               Vote[]
+  comments            Comment[]
+
+  @@unique([year, slug])
+  @@index([year, status])
+}
+
+model AwardNomination {
+  id                  String               @id @default(cuid())
+  awardId             String
+  creatorId           String
+  nominatedByUserId   String?
+  nominationReason    String?
+  status              NominationStatus     @default(PENDING)
+  voteCount           Int                  @default(0)
+  creatorStarsAtClose Int?
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+  award               Award                @relation(fields: [awardId], references: [id], onDelete: Cascade)
+  creator             Creator              @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  nominatedByUser     User?                @relation(fields: [nominatedByUserId], references: [id])
+
+  @@unique([awardId, creatorId])
+  @@index([status, voteCount])
+}
+
+model Vote {
+  id                  String               @id @default(cuid())
+  userId              String
+  creatorId           String
+  awardId             String?
+  rankingPageId       String?
+  voteType            VoteType
+  weight              Int                  @default(1)
+  ipHash              String?
+  userAgentHash       String?
+  isSuspicious        Boolean              @default(false)
+  isVoided            Boolean              @default(false)
+  createdAt           DateTime             @default(now())
+  user                User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  creator             Creator              @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  award               Award?               @relation(fields: [awardId], references: [id])
+  rankingPage         RankingPage?         @relation(fields: [rankingPageId], references: [id])
+
+  @@index([userId, creatorId, awardId, voteType])
+  @@index([createdAt])
+  @@index([ipHash, createdAt])
+}
+
+model Comment {
+  id                  String               @id @default(cuid())
+  userId              String
+  creatorId           String?
+  awardId             String?
+  rankingPageId       String?
+  parentCommentId     String?
+  body                String
+  status              CommentStatus        @default(PENDING)
+  score               Int                  @default(0)
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+  user                User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  creator             Creator?             @relation(fields: [creatorId], references: [id])
+  award               Award?               @relation(fields: [awardId], references: [id])
+  rankingPage         RankingPage?         @relation(fields: [rankingPageId], references: [id])
+  parentComment       Comment?             @relation("CommentReplies", fields: [parentCommentId], references: [id])
+  replies             Comment[]            @relation("CommentReplies")
+  reports             ModerationReport[]
+
+  @@index([creatorId, status])
+  @@index([awardId, status])
+  @@index([rankingPageId, status])
+  @@index([parentCommentId])
+}
+
+model CreatorClaim {
+  id                   String              @id @default(cuid())
+  creatorId            String
+  userId               String
+  status               ClaimStatus         @default(PENDING)
+  verificationMethod   VerificationMethod
+  verificationEvidence String?
+  adminNotes           String?
+  createdAt            DateTime            @default(now())
+  updatedAt            DateTime            @updatedAt
+  creator              Creator             @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  user                 User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([creatorId, userId])
+  @@index([status])
+}
+
+model RankingPage {
+  id                  String               @id @default(cuid())
+  slug                String               @unique
+  title               String
+  pageType            RankingPageType
+  description         String
+  introContent        String
+  seoTitle            String
+  seoDescription      String
+  canonicalUrl        String?
+  isIndexable         Boolean              @default(false)
+  minCreatorCount     Int                  @default(10)
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+  entries             RankingEntry[]
+  votes               Vote[]
+  comments            Comment[]
+
+  @@index([pageType, isIndexable])
+}
+
+model RankingEntry {
+  id                  String               @id @default(cuid())
+  rankingPageId       String
+  creatorId           String
+  rank                Int
+  score               Float
+  previousRank        Int?
+  movement            Int                  @default(0)
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+  rankingPage         RankingPage          @relation(fields: [rankingPageId], references: [id], onDelete: Cascade)
+  creator             Creator              @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+
+  @@unique([rankingPageId, creatorId])
+  @@index([rankingPageId, rank])
+}
+
+model ModerationReport {
+  id                  String               @id @default(cuid())
+  reporterUserId      String
+  creatorId           String?
+  commentId           String?
+  reason              String
+  details             String?
+  status              ReportStatus         @default(OPEN)
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+  reporter            User                 @relation(fields: [reporterUserId], references: [id], onDelete: Cascade)
+  creator             Creator?             @relation(fields: [creatorId], references: [id])
+  comment             Comment?             @relation(fields: [commentId], references: [id])
+
+  @@index([status, createdAt])
+}
+
+model RewardCampaign {
+  id                       String            @id @default(cuid())
+  title                    String
+  slug                     String            @unique
+  month                    Int
+  year                     Int
+  startsAt                 DateTime
+  endsAt                   DateTime
+  status                   RewardCampaignStatus @default(DRAFT)
+  prizeDescription         String
+  prizeValueCap            Decimal           @db.Decimal(10, 2)
+  numberOfWinners          Int               @default(1)
+  eligibilityRules         Json
+  noPurchaseNecessaryText  String
+  officialRulesUrl         String?
+  requiresAgeVerification  Boolean           @default(true)
+  minimumAge               Int               @default(18)
+  createdAt                DateTime          @default(now())
+  updatedAt                DateTime          @updatedAt
+  fanScores                FanRewardScore[]
+  winners                  RewardWinner[]
+  participatingCreators    ParticipatingCreatorRewardOptIn[]
+
+  @@unique([year, month])
+  @@index([status, startsAt])
+}
+
+model FanRewardScore {
+  id                  String               @id @default(cuid())
+  userId              String
+  campaignId          String
+  votePoints          Int                  @default(0)
+  nominationPoints    Int                  @default(0)
+  commentPoints       Int                  @default(0)
+  sharePoints         Int                  @default(0)
+  trustPoints         Int                  @default(0)
+  penaltyPoints       Int                  @default(0)
+  totalScore          Int                  @default(0)
+  rank                Int?
+  isEligible          Boolean              @default(false)
+  ineligibilityReason String?
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+  user                User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  campaign            RewardCampaign       @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, campaignId])
+  @@index([campaignId, rank])
+}
+
+model RewardWinner {
+  id                    String               @id @default(cuid())
+  campaignId            String
+  userId                String
+  rank                  Int
+  prizeType             String
+  prizeValue            Decimal              @db.Decimal(10, 2)
+  selectedCreatorId     String?
+  ageVerificationStatus AgeVerificationStatus @default(PENDING)
+  fulfillmentStatus     FulfillmentStatus    @default(PENDING)
+  taxStatus             TaxStatus            @default(NOT_REQUIRED)
+  disqualificationReason String?
+  adminNotes            String?
+  createdAt             DateTime             @default(now())
+  updatedAt             DateTime             @updatedAt
+  campaign              RewardCampaign       @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  user                  User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  selectedCreator       Creator?             @relation(fields: [selectedCreatorId], references: [id])
+
+  @@unique([campaignId, userId])
+  @@index([campaignId, rank])
+}
+
+model AgeVerification {
+  id                  String               @id @default(cuid())
+  userId              String
+  provider            String
+  providerReferenceId String
+  status              AgeVerificationStatus @default(PENDING)
+  country             String?
+  state               String?
+  verifiedAt          DateTime?
+  expiresAt           DateTime?
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+  user                User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerReferenceId])
+  @@index([userId, status])
+}
+
+model ParticipatingCreatorRewardOptIn {
+  id                      String           @id @default(cuid())
+  creatorId               String
+  campaignId              String
+  isOptedIn               Boolean          @default(false)
+  maxSubscriptionCredit   Decimal          @db.Decimal(10, 2)
+  creatorBonusDescription String?
+  createdAt               DateTime         @default(now())
+  updatedAt               DateTime         @updatedAt
+  creator                 Creator          @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  campaign                RewardCampaign   @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+
+  @@unique([creatorId, campaignId])
+  @@index([campaignId, isOptedIn])
+}

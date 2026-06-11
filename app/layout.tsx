@@ -4,9 +4,9 @@ import type { ReactNode } from "react";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "CPCAdvertising.com AI Creatives and Campaign Generation",
+  title: "OnlyCreatorAwards | Creator Awards and Discovery",
   description:
-    "Generate creatives, targeting, bids, budgets, and TrafficHaus-ready advertising campaigns from one AI-driven workspace.",
+    "PG creator discovery, annual awards, CreatorStars rankings, fan voting, profile claims, and creator-safe public directories.",
   icons: {
     apple: "/favicon.png",
     icon: "/favicon.png",
