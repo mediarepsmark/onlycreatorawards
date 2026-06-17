@@ -1,32 +1,61 @@
 name: Deploy
 
 on:
-  push:
-    branches:
-      - main
   workflow_dispatch:
 
 jobs:
   deploy:
+    name: Deploy Docker stack
     runs-on: ubuntu-latest
     steps:
-      - name: Deploy main to Mojohost
+      - name: Deploy OnlyCreatorAwards to Docker host
         uses: appleboy/ssh-action@v1.2.0
+        env:
+          APP_DIR: ${{ vars.APP_DIR || '/home/httpd/html/onlycreatorawards.com/app' }}
+          APP_PORT: ${{ vars.APP_PORT || '3000' }}
+          NEXT_PUBLIC_SITE_URL: ${{ vars.NEXT_PUBLIC_SITE_URL || 'https://onlycreatorawards.com' }}
+          POSTGRES_DB: ${{ vars.POSTGRES_DB || 'onlycreatorawards' }}
+          POSTGRES_USER: ${{ vars.POSTGRES_USER || 'onlycreatorawards' }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          REPO_URL: ${{ vars.REPO_URL || 'https://github.com/mediarepsmark/onlycreatorawards.git' }}
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
-          password: ${{ secrets.SSH_PASSWORD }}
-          port: ${{ secrets.SSH_PORT }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT || '22' }}
+          envs: APP_DIR,APP_PORT,NEXT_PUBLIC_SITE_URL,POSTGRES_DB,POSTGRES_USER,POSTGRES_PASSWORD,REPO_URL
           script: |
-            set -e
-            export PATH="$HOME/.nvm/versions/node/v22.22.2/bin:$PATH"
-            if [ ! -d "$HOME/cpcadvertising/.git" ]; then
-              git clone https://github.com/mediarepsmark/cpcadvertising.git "$HOME/cpcadvertising"
+            set -euo pipefail
+
+            if ! command -v docker >/dev/null 2>&1; then
+              echo "Docker is not installed on this host."
+              exit 1
             fi
-            cd "$HOME/cpcadvertising"
-            git pull --ff-only origin main
-            npm install
-            npm run build
-            pm2 restart cpcadvertising-app --update-env || pm2 start npm --name cpcadvertising-app -- start
-            pm2 save
-            pm2 startup || true
+
+            if ! docker compose version >/dev/null 2>&1; then
+              echo "Docker Compose plugin is not installed on this host."
+              exit 1
+            fi
+
+            mkdir -p "$APP_DIR"
+
+            if [ ! -d "$APP_DIR/.git" ]; then
+              git clone "$REPO_URL" "$APP_DIR"
+            fi
+
+            cd "$APP_DIR"
+            git fetch origin main
+            git reset --hard origin/main
+
+            {
+              printf 'APP_PORT=%s\n' "$APP_PORT"
+              printf 'NEXT_PUBLIC_SITE_URL=%s\n' "$NEXT_PUBLIC_SITE_URL"
+              printf 'POSTGRES_DB=%s\n' "$POSTGRES_DB"
+              printf 'POSTGRES_USER=%s\n' "$POSTGRES_USER"
+              printf 'POSTGRES_PASSWORD=%s\n' "$POSTGRES_PASSWORD"
+              printf 'DATABASE_URL=postgresql://%s:%s@db:5432/%s\n' "$POSTGRES_USER" "$POSTGRES_PASSWORD" "$POSTGRES_DB"
+            } > .env.docker
+
+            docker compose --env-file .env.docker build app
+            docker compose --env-file .env.docker up -d
+            docker compose --env-file .env.docker ps
