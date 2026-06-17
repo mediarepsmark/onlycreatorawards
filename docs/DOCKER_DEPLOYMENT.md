@@ -36,6 +36,7 @@ Recommended production shape:
 - Nginx terminates SSL on the host and proxies to `127.0.0.1:3000`.
 - `docker compose` runs the app and Postgres, or the app points at a managed Postgres instance.
 - `.env.docker` is created on the server and never committed.
+- The Compose file publishes the app on `127.0.0.1:3000` only; the public web server should be the only public entry point.
 
 Minimum `.env.docker` production values:
 
