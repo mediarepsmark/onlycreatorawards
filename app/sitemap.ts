@@ -10,7 +10,7 @@ import {
   getRankingPages
 } from "@/lib/onlycreatorawards/repository";
 import { getBlogPosts } from "@/lib/onlycreatorawards/blog";
-import { getImportedModels, getModelDirectorySections } from "@/lib/onlycreatorawards/modelDirectory";
+import { getModelDirectorySections, getTopImportedModels } from "@/lib/onlycreatorawards/modelDirectory";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const now = new Date();
@@ -34,7 +34,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   ];
 
   const creatorUrls = getIndexableCreators().map((creator) => `/creator/${creator.slug}`);
-  const modelUrls = getImportedModels().map((model) => `/model/${model.slug}`);
+  const modelUrls = getTopImportedModels(2000).map((model) => `/model/${model.slug}`);
   const modelSectionUrls = getModelDirectorySections()
     .filter((section) => section.count >= 5)
     .map((section) => `/models/category/${section.slug}`);

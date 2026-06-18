@@ -43,13 +43,23 @@ const featureCards: Array<{ title: string; body: string; Icon: LucideIcon }> = [
   }
 ];
 
+type ModelsPageProps = {
+  searchParams: Promise<{ page?: string }>;
+};
+
 function formatDate(value: string) {
   if (!value) return "Pending first import";
   return new Intl.DateTimeFormat("en", { month: "short", day: "numeric", year: "numeric" }).format(new Date(value));
 }
 
-export default function ModelsPage() {
+export default async function ModelsPage({ searchParams }: ModelsPageProps) {
+  const { page: pageParam = "1" } = await searchParams;
+  const pageSize = 96;
   const models = getImportedModels();
+  const page = Math.max(1, Number.parseInt(pageParam, 10) || 1);
+  const totalPages = Math.max(1, Math.ceil(models.length / pageSize));
+  const currentPage = Math.min(page, totalPages);
+  const pageModels = models.slice((currentPage - 1) * pageSize, currentPage * pageSize);
   const stats = getModelDirectoryStats();
   const sections = getModelDirectorySections().slice(0, 16);
 
@@ -138,8 +148,8 @@ export default function ModelsPage() {
             </div>
             {models.length ? (
               <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-                {models.map((model, index) => (
-                  <ImportedModelCard key={model.id} model={model} rank={index + 1} />
+                {pageModels.map((model, index) => (
+                  <ImportedModelCard key={model.id} model={model} rank={(currentPage - 1) * pageSize + index + 1} />
                 ))}
               </div>
             ) : (
@@ -152,6 +162,31 @@ export default function ModelsPage() {
                 </CardContent>
               </Card>
             )}
+            {models.length > pageSize ? (
+              <div className="mt-8 flex flex-wrap items-center justify-between gap-4 rounded-xl border border-white/10 bg-white/[0.045] p-4">
+                <p className="text-sm font-black text-white/65">
+                  Page {currentPage.toLocaleString()} of {totalPages.toLocaleString()} · {models.length.toLocaleString()} total models
+                </p>
+                <div className="flex gap-2">
+                  {currentPage > 1 ? (
+                    <Link
+                      href={`/models?page=${currentPage - 1}`}
+                      className="inline-flex min-h-10 items-center rounded-lg border border-white/10 px-4 text-sm font-black text-white transition hover:border-brand-amber/60 hover:text-brand-amber"
+                    >
+                      Previous
+                    </Link>
+                  ) : null}
+                  {currentPage < totalPages ? (
+                    <Link
+                      href={`/models?page=${currentPage + 1}`}
+                      className="inline-flex min-h-10 items-center rounded-lg bg-brand-amber px-4 text-sm font-black text-ink transition hover:bg-white"
+                    >
+                      Next
+                    </Link>
+                  ) : null}
+                </div>
+              </div>
+            ) : null}
           </div>
         </div>
       </section>

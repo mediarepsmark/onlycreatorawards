@@ -8,7 +8,7 @@ import {
   getRankingPages
 } from "@/lib/onlycreatorawards/repository";
 import { getBlogPosts } from "@/lib/onlycreatorawards/blog";
-import { getImportedModels, getModelDirectorySections } from "@/lib/onlycreatorawards/modelDirectory";
+import { getModelDirectorySections, getTopImportedModels } from "@/lib/onlycreatorawards/modelDirectory";
 
 type SitemapRouteProps = {
   params: Promise<{ kind: string }>;
@@ -54,7 +54,7 @@ function urlsForKind(kind: string) {
     case "models":
       return [
         "/models",
-        ...getImportedModels().map((model) => `/model/${model.slug}`),
+        ...getTopImportedModels(2000).map((model) => `/model/${model.slug}`),
         ...getModelDirectorySections()
           .filter((section) => section.count >= 5)
           .map((section) => `/models/category/${section.slug}`)

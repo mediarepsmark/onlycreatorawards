@@ -17,6 +17,7 @@ import { buildMetadata, itemListSchema } from "@/lib/onlycreatorawards/seo";
 
 type ModelCategoryPageProps = {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{ page?: string }>;
 };
 
 export const dynamic = "force-dynamic";
@@ -40,10 +41,16 @@ export async function generateMetadata({ params }: ModelCategoryPageProps) {
   });
 }
 
-export default async function ModelCategoryPage({ params }: ModelCategoryPageProps) {
+export default async function ModelCategoryPage({ params, searchParams }: ModelCategoryPageProps) {
   const { slug } = await params;
+  const { page: pageParam = "1" } = await searchParams;
+  const pageSize = 96;
   const section = getModelDirectorySectionBySlug(slug);
   const models = getModelsForSection(slug);
+  const page = Math.max(1, Number.parseInt(pageParam, 10) || 1);
+  const totalPages = Math.max(1, Math.ceil(models.length / pageSize));
+  const currentPage = Math.min(page, totalPages);
+  const pageModels = models.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
   if (!section || (!models.length && slug !== "uncategorized")) notFound();
 
@@ -90,10 +97,35 @@ export default async function ModelCategoryPage({ params }: ModelCategoryPagePro
             </Link>
           </div>
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-            {models.map((model, index) => (
-              <ImportedModelCard key={model.id} model={model} rank={index + 1} />
+            {pageModels.map((model, index) => (
+              <ImportedModelCard key={model.id} model={model} rank={(currentPage - 1) * pageSize + index + 1} />
             ))}
           </div>
+          {models.length > pageSize ? (
+            <div className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-white/10 bg-white/[0.045] p-4">
+              <p className="text-sm font-black text-white/65">
+                Page {currentPage.toLocaleString()} of {totalPages.toLocaleString()} · {models.length.toLocaleString()} total models
+              </p>
+              <div className="flex gap-2">
+                {currentPage > 1 ? (
+                  <Link
+                    href={`/models/category/${slug}?page=${currentPage - 1}`}
+                    className="inline-flex min-h-10 items-center rounded-lg border border-white/10 px-4 text-sm font-black text-white transition hover:border-brand-amber/60 hover:text-brand-amber"
+                  >
+                    Previous
+                  </Link>
+                ) : null}
+                {currentPage < totalPages ? (
+                  <Link
+                    href={`/models/category/${slug}?page=${currentPage + 1}`}
+                    className="inline-flex min-h-10 items-center rounded-lg bg-brand-amber px-4 text-sm font-black text-ink transition hover:bg-white"
+                  >
+                    Next
+                  </Link>
+                ) : null}
+              </div>
+            </div>
+          ) : null}
         </div>
       </section>
     </SiteShell>
