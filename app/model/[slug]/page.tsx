@@ -5,7 +5,7 @@ import type { LucideIcon } from "lucide-react";
 
 import { ImportedModelCard } from "@/components/onlycreatorawards/ImportedModelCard";
 import { JsonLd } from "@/components/onlycreatorawards/JsonLd";
-import { ModelPortraitStage } from "@/components/onlycreatorawards/ModelPortraitStage";
+import { ModelImage } from "@/components/onlycreatorawards/ModelImage";
 import { PageHeader } from "@/components/onlycreatorawards/PageHeader";
 import { SiteShell } from "@/components/onlycreatorawards/SiteShell";
 import { Badge } from "@/components/ui/badge";
@@ -83,15 +83,16 @@ export default async function ModelProfilePage({ params }: ModelPageProps) {
         <div className="mx-auto grid max-w-7xl gap-6 px-4 sm:px-6 lg:grid-cols-[420px_1fr] lg:px-8">
           <Card className="overflow-hidden border-white/10 bg-white/[0.045] text-white">
             <CardContent className="p-0">
-              <div className="relative aspect-[4/5] bg-gradient-to-br from-brand-purple/30 via-black to-brand-cyan/20">
-                <ModelPortraitStage
-                  src={model.profileImageUrl}
-                  alt={model.imageAltText || `${model.displayName} profile`}
-                  className="absolute inset-0"
-                  contentClassName="top-1/2 -translate-y-1/2"
-                  portraitClassName="h-52 w-52 sm:h-64 sm:w-64"
-                  loading="eager"
-                />
+              <div className="relative flex aspect-[4/5] items-center justify-center bg-[#05070d] p-8">
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_40%,rgba(244,201,93,0.08),transparent_16rem)]" />
+                <div className="relative h-full max-h-[340px] w-full max-w-[340px] overflow-hidden rounded-3xl border border-white/10 bg-black shadow-[0_24px_70px_rgba(0,0,0,0.42)] ring-1 ring-brand-amber/25">
+                  <ModelImage
+                    src={model.profileImageUrl}
+                    alt={model.imageAltText || `${model.displayName} profile`}
+                    className="h-full w-full object-cover object-top brightness-110 contrast-110 saturate-125"
+                    loading="eager"
+                  />
+                </div>
                 <Badge className="absolute left-4 top-4 border-brand-amber/50 bg-black/70 text-brand-amber">
                   Source #{model.sourceOrder}
                 </Badge>

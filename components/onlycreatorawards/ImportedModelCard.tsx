@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ArrowUpRight, BadgeCheck, MousePointerClick, Users } from "lucide-react";
 
-import { ModelPortraitStage } from "@/components/onlycreatorawards/ModelPortraitStage";
+import { ModelImage } from "@/components/onlycreatorawards/ModelImage";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { getImportedModelAudienceStat, type ImportedModel } from "@/lib/onlycreatorawards/modelDirectory";
@@ -26,14 +26,15 @@ export function ImportedModelCard({ model, rank }: { model: ImportedModel; rank?
     <Card className="group h-full overflow-hidden border-white/10 bg-[#080b12] text-white shadow-[0_24px_80px_rgba(0,0,0,0.22)] transition hover:-translate-y-1 hover:border-brand-amber/60">
       <CardContent className="p-0">
         <Link href={`/model/${model.slug}`} className="block">
-          <div className="relative aspect-[4/5] overflow-hidden bg-gradient-to-br from-brand-purple/30 via-black to-brand-cyan/20">
-            <ModelPortraitStage
-              src={model.profileImageUrl}
-              alt={model.imageAltText || `${model.displayName} profile`}
-              className="absolute inset-0 transition duration-500 group-hover:scale-[1.01]"
-              contentClassName="top-8"
-              portraitClassName="h-36 w-36 sm:h-40 sm:w-40"
-            />
+          <div className="relative flex aspect-[4/5] items-center justify-center overflow-hidden bg-[#05070d] p-5">
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_40%,rgba(244,201,93,0.08),transparent_13rem)]" />
+            <div className="relative h-full max-h-[220px] w-full max-w-[220px] overflow-hidden rounded-2xl border border-white/10 bg-black shadow-[0_18px_45px_rgba(0,0,0,0.35)] ring-1 ring-brand-amber/20 transition duration-500 group-hover:scale-[1.02]">
+              <ModelImage
+                src={model.profileImageUrl}
+                alt={model.imageAltText || `${model.displayName} profile`}
+                className="h-full w-full object-cover object-top brightness-110 contrast-110 saturate-125"
+              />
+            </div>
             {rank ? (
               <Badge className="absolute left-3 top-3 border-brand-amber/50 bg-black/70 text-brand-amber shadow-gold-glow">
                 #{rank}
