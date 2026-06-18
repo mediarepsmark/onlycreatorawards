@@ -24,9 +24,9 @@ import { SearchPanel } from "@/components/onlycreatorawards/SearchPanel";
 import { SiteShell } from "@/components/onlycreatorawards/SiteShell";
 import { Badge } from "@/components/ui/badge";
 import {
+  getFeaturedModelForSection,
   getModelDirectorySections,
   getModelDirectoryStats,
-  getModelsForSection,
   getTopImportedModels
 } from "@/lib/onlycreatorawards/modelDirectory";
 import { getAwardYears, getAwards, getCreators, siteConfig } from "@/lib/onlycreatorawards/repository";
@@ -51,7 +51,7 @@ export default function HomePage() {
     .slice(0, 8)
     .map((section) => ({
       section,
-      model: getModelsForSection(section.slug, 1)[0]
+      model: getFeaturedModelForSection(section.slug)
     }));
   const creators = getCreators()
     .filter((creator) => creator.status === "PUBLISHED")

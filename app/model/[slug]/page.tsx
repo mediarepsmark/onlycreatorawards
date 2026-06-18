@@ -1,15 +1,17 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowUpRight, BadgeCheck, CalendarClock, MapPin, MousePointerClick, Sparkles, Users } from "lucide-react";
+import { ArrowUpRight, BadgeCheck, CalendarClock, MapPin, MousePointerClick, Users } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
 import { ImportedModelCard } from "@/components/onlycreatorawards/ImportedModelCard";
 import { JsonLd } from "@/components/onlycreatorawards/JsonLd";
+import { ModelImage } from "@/components/onlycreatorawards/ModelImage";
 import { PageHeader } from "@/components/onlycreatorawards/PageHeader";
 import { SiteShell } from "@/components/onlycreatorawards/SiteShell";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import {
+  getImportedModelAudienceStat,
   getImportedModelBySlug,
   getImportedModels,
   getModelsForSection
@@ -55,8 +57,9 @@ export default async function ModelProfilePage({ params }: ModelPageProps) {
   const relatedSection = model.categorySlugs[0] ?? "all";
   const related = getModelsForSection(relatedSection, 5).filter((item) => item.slug !== model.slug).slice(0, 4);
   const location = locationFor(model);
+  const audience = getImportedModelAudienceStat(model);
   const statCards: Array<{ Icon: LucideIcon; label: string; value: string }> = [
-    { Icon: Users, label: "Fans", value: model.sourceFanCount.toLocaleString() },
+    { Icon: Users, label: audience.label, value: audience.value ? audience.value.toLocaleString() : "Feed profile" },
     { Icon: MousePointerClick, label: "Clicks", value: model.clickCount.toLocaleString() },
     { Icon: BadgeCheck, label: "Popularity", value: model.popularityScore.toLocaleString() }
   ];
@@ -81,17 +84,11 @@ export default async function ModelProfilePage({ params }: ModelPageProps) {
           <Card className="overflow-hidden border-white/10 bg-white/[0.045] text-white">
             <CardContent className="p-0">
               <div className="relative aspect-[4/5] bg-gradient-to-br from-brand-purple/30 via-black to-brand-cyan/20">
-                {model.profileImageUrl ? (
-                  <img
-                    src={model.profileImageUrl}
-                    alt={model.imageAltText || `${model.displayName} profile`}
-                    className="h-full w-full object-cover"
-                  />
-                ) : (
-                  <div className="flex h-full w-full items-center justify-center">
-                    <Sparkles className="h-16 w-16 text-brand-amber" aria-hidden="true" />
-                  </div>
-                )}
+                <ModelImage
+                  src={model.profileImageUrl}
+                  alt={model.imageAltText || `${model.displayName} profile`}
+                  className="h-full w-full object-cover"
+                />
                 <Badge className="absolute left-4 top-4 border-brand-amber/50 bg-black/70 text-brand-amber">
                   Source #{model.sourceOrder}
                 </Badge>
@@ -151,7 +148,7 @@ export default async function ModelProfilePage({ params }: ModelPageProps) {
                         </Link>
                       ))
                     ) : (
-                      <Badge className="border-white/10 bg-white/[0.06] text-white/55">Uncategorized</Badge>
+                      <Badge className="border-white/10 bg-white/[0.06] text-white/55">Amateur</Badge>
                     )}
                   </div>
                 </div>

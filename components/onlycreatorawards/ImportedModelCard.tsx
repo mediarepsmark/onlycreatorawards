@@ -1,9 +1,10 @@
 import Link from "next/link";
-import { ArrowUpRight, BadgeCheck, MousePointerClick, Sparkles, Users } from "lucide-react";
+import { ArrowUpRight, BadgeCheck, MousePointerClick, Users } from "lucide-react";
 
+import { ModelImage } from "@/components/onlycreatorawards/ModelImage";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import type { ImportedModel } from "@/lib/onlycreatorawards/modelDirectory";
+import { getImportedModelAudienceStat, type ImportedModel } from "@/lib/onlycreatorawards/modelDirectory";
 
 function compactNumber(value: number) {
   return Intl.NumberFormat("en", {
@@ -18,24 +19,19 @@ function primaryCategory(model: ImportedModel) {
 
 export function ImportedModelCard({ model, rank }: { model: ImportedModel; rank?: number }) {
   const outboundUrl = model.onlyfansUrl || model.clickUrl;
+  const audience = getImportedModelAudienceStat(model);
+  const audienceText = audience.value ? `${compactNumber(audience.value)} ${audience.label.toLowerCase()}` : "Feed profile";
 
   return (
     <Card className="group h-full overflow-hidden border-white/10 bg-[#080b12] text-white shadow-[0_24px_80px_rgba(0,0,0,0.22)] transition hover:-translate-y-1 hover:border-brand-amber/60">
       <CardContent className="p-0">
         <Link href={`/model/${model.slug}`} className="block">
           <div className="relative aspect-[4/5] overflow-hidden bg-gradient-to-br from-brand-purple/30 via-black to-brand-cyan/20">
-            {model.profileImageUrl ? (
-              <img
-                src={model.profileImageUrl}
-                alt={model.imageAltText || `${model.displayName} profile`}
-                className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
-                loading="lazy"
-              />
-            ) : (
-              <div className="flex h-full w-full items-center justify-center">
-                <Sparkles className="h-12 w-12 text-brand-amber" aria-hidden="true" />
-              </div>
-            )}
+            <ModelImage
+              src={model.profileImageUrl}
+              alt={model.imageAltText || `${model.displayName} profile`}
+              className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+            />
             <div className="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-black via-black/70 to-transparent" />
             {rank ? (
               <Badge className="absolute left-3 top-3 border-brand-amber/50 bg-black/70 text-brand-amber shadow-gold-glow">
@@ -57,7 +53,7 @@ export function ImportedModelCard({ model, rank }: { model: ImportedModel; rank?
           <div className="grid grid-cols-2 gap-2 text-xs font-black text-white/70">
             <div className="rounded-lg border border-white/10 bg-white/[0.04] p-2">
               <Users className="mb-1 h-4 w-4 text-brand-amber" aria-hidden="true" />
-              {compactNumber(model.sourceFanCount)} fans
+              {audienceText}
             </div>
             <div className="rounded-lg border border-white/10 bg-white/[0.04] p-2">
               <MousePointerClick className="mb-1 h-4 w-4 text-brand-cyan" aria-hidden="true" />

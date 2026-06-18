@@ -66,11 +66,30 @@ function slugify(value, fallback = "model") {
 }
 
 function titleizeSlug(slug) {
+  if (slug === "uncategorized") return "Amateur";
+
   return slug
     .split("-")
     .filter(Boolean)
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
     .join(" ");
+}
+
+function audienceMetricFromText(value) {
+  const text = asString(value).toLowerCase().replace(/,/g, "");
+  if (!text) return 0;
+
+  const match = text.match(/(\d+(?:\.\d+)?)\s*([kmb])?\+?\s*(subs?|subscribers?|fans?|followers?)\b/i);
+  if (!match) return 0;
+
+  const parsed = Number(match[1]);
+  if (!Number.isFinite(parsed)) return 0;
+
+  const multiplier = match[2];
+  if (multiplier === "b") return parsed * 1_000_000_000;
+  if (multiplier === "m") return parsed * 1_000_000;
+  if (multiplier === "k") return parsed * 1_000;
+  return parsed;
 }
 
 function unique(values) {
@@ -105,7 +124,10 @@ function keywordSlugsFrom(rawCategory) {
 }
 
 function calculatePopularity(raw, sourceOrder) {
-  const fans = metric(raw.nr_of_fans || raw.fans || raw.subscribers);
+  const fans =
+    metric(raw.nr_of_fans || raw.fans || raw.subscribers) ||
+    audienceMetricFromText(raw.name) ||
+    audienceMetricFromText(raw.details);
   const likes = metric(raw.nr_of_likes || raw.likes);
   const posts = metric(raw.nr_of_posts || raw.posts);
   const videos = metric(raw.nr_of_videos || raw.videos);

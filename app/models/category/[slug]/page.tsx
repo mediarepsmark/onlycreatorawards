@@ -10,6 +10,7 @@ import { SiteShell } from "@/components/onlycreatorawards/SiteShell";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import {
+  getFeaturedModelForSection,
   getModelDirectorySectionBySlug,
   getModelDirectorySections,
   getModelsForSection
@@ -52,7 +53,7 @@ export default async function ModelCategoryPage({ params, searchParams }: ModelC
   const totalPages = Math.max(1, Math.ceil(models.length / pageSize));
   const currentPage = Math.min(page, totalPages);
   const pageModels = models.slice((currentPage - 1) * pageSize, currentPage * pageSize);
-  const topModel = models[0];
+  const topModel = getFeaturedModelForSection(slug);
 
   if (!section || (!models.length && slug !== "uncategorized")) notFound();
 

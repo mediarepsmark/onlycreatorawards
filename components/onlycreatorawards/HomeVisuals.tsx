@@ -28,8 +28,9 @@ import {
 } from "lucide-react";
 
 import { CreatorAvatar } from "@/components/onlycreatorawards/CreatorAvatar";
+import { ModelImage } from "@/components/onlycreatorawards/ModelImage";
 import { Badge } from "@/components/ui/badge";
-import type { ImportedModel, ModelDirectorySection } from "@/lib/onlycreatorawards/modelDirectory";
+import { getImportedModelAudienceStat, type ImportedModel, type ModelDirectorySection } from "@/lib/onlycreatorawards/modelDirectory";
 import { getCreatorStarsLevel } from "@/lib/onlycreatorawards/scoring";
 import type { Award as AwardType, CreatorProfile } from "@/lib/onlycreatorawards/types";
 
@@ -90,6 +91,15 @@ function compactNumber(value: number) {
 
 function modelImageAlt(model: ImportedModel) {
   return model.imageAltText || `${model.displayName} profile`;
+}
+
+function audienceDisplay(model: ImportedModel) {
+  const audience = getImportedModelAudienceStat(model);
+
+  return {
+    value: audience.value ? compactNumber(audience.value) : "Live",
+    label: audience.label
+  };
 }
 
 export function SectionHeader({
@@ -201,20 +211,16 @@ export function SpotlightCreatorCard({ creator, rank }: { creator: CreatorProfil
 
 export function FeaturedModelPhotoCard({ model, rank }: { model: ImportedModel; rank: number }) {
   const outboundUrl = model.onlyfansUrl || model.clickUrl;
+  const audience = audienceDisplay(model);
 
   return (
     <Link href={`/model/${model.slug}`} className="group block h-full">
       <article className="relative min-h-[340px] overflow-hidden rounded-lg border border-white/[0.12] bg-black transition hover:-translate-y-1 hover:border-brand-amber/60 hover:shadow-gold-glow">
-        {model.profileImageUrl ? (
-          <img
-            src={model.profileImageUrl}
-            alt={modelImageAlt(model)}
-            className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-105"
-            loading="lazy"
-          />
-        ) : (
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_20%,rgba(168,85,247,0.42),transparent_18rem),linear-gradient(135deg,#111827,#020617)]" />
-        )}
+        <ModelImage
+          src={model.profileImageUrl}
+          alt={modelImageAlt(model)}
+          className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-105"
+        />
         <div className="absolute inset-0 bg-gradient-to-t from-black via-black/48 to-black/5" />
         <div className="absolute left-4 top-4 flex gap-2">
           <Badge className="border-brand-amber/50 bg-black/70 text-brand-amber">#{rank}</Badge>
@@ -228,8 +234,8 @@ export function FeaturedModelPhotoCard({ model, rank }: { model: ImportedModel; 
                 <p className="mt-1 truncate text-sm font-bold text-white/60">{model.handle ?? "Imported profile"}</p>
               </div>
               <div className="shrink-0 text-right">
-                <p className="text-xl font-black text-brand-amber">{compactNumber(model.sourceFanCount)}</p>
-                <p className="text-xs font-black uppercase tracking-normal text-white/45">Fans</p>
+                <p className="text-xl font-black text-brand-amber">{audience.value}</p>
+                <p className="text-xs font-black uppercase tracking-normal text-white/45">{audience.label}</p>
               </div>
             </div>
             <div className="mt-4 flex flex-wrap gap-2">
@@ -266,7 +272,7 @@ export function ModelLeaderboardCard({ model, rank }: { model: ImportedModel; ra
           {rank}
         </div>
         <div className="relative h-14 w-14 overflow-hidden rounded-lg border border-white/10 bg-black">
-          {model.profileImageUrl ? <img src={model.profileImageUrl} alt="" className="h-full w-full object-cover" loading="lazy" /> : null}
+          <ModelImage src={model.profileImageUrl} alt={modelImageAlt(model)} className="h-full w-full object-cover" />
         </div>
         <div className="min-w-0">
           <h3 className="truncate font-black text-white group-hover:text-brand-amber">{model.displayName}</h3>
@@ -291,20 +297,20 @@ export function ModelHeroStack({ models }: { models: ImportedModel[] }) {
     return null;
   }
 
+  const primaryAudience = audienceDisplay(primary);
+
   return (
     <div className="relative ml-auto max-w-[500px]">
       <div className="absolute -left-8 top-10 h-36 w-36 rounded-full bg-brand-purple/25 blur-3xl" />
       <div className="absolute -right-8 bottom-10 h-36 w-36 rounded-full bg-brand-cyan/20 blur-3xl" />
       <Link href={`/model/${primary.slug}`} className="group relative block overflow-hidden rounded-lg border border-brand-amber/40 bg-black shadow-gold-glow">
         <div className="relative aspect-[0.88]">
-          {primary.profileImageUrl ? (
-            <img
-              src={primary.profileImageUrl}
-              alt={modelImageAlt(primary)}
-              className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-105"
-              loading="eager"
-            />
-          ) : null}
+          <ModelImage
+            src={primary.profileImageUrl}
+            alt={modelImageAlt(primary)}
+            className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-105"
+            loading="eager"
+          />
           <div className="absolute inset-0 bg-gradient-to-t from-black via-black/35 to-transparent" />
           <Badge className="absolute left-4 top-4 border-brand-amber/50 bg-black/70 text-brand-amber">Featured profile</Badge>
           <div className="absolute inset-x-0 bottom-0 p-5">
@@ -313,8 +319,8 @@ export function ModelHeroStack({ models }: { models: ImportedModel[] }) {
               <h2 className="mt-2 text-3xl font-black text-white group-hover:text-brand-amber">{primary.displayName}</h2>
               <div className="mt-4 grid grid-cols-3 gap-2 text-center text-xs font-black">
                 <div className="rounded-lg border border-white/10 bg-white/[0.06] p-2">
-                  <p className="text-lg text-brand-amber">{compactNumber(primary.sourceFanCount)}</p>
-                  <p className="text-white/45">Fans</p>
+                  <p className="text-lg text-brand-amber">{primaryAudience.value}</p>
+                  <p className="text-white/45">{primaryAudience.label}</p>
                 </div>
                 <div className="rounded-lg border border-white/10 bg-white/[0.06] p-2">
                   <p className="text-lg text-brand-cyan">{compactNumber(primary.clickCount)}</p>
@@ -338,7 +344,7 @@ export function ModelHeroStack({ models }: { models: ImportedModel[] }) {
           >
             <div className="flex items-center gap-3">
               <div className="h-14 w-14 shrink-0 overflow-hidden rounded-lg bg-white/10">
-                {model.profileImageUrl ? <img src={model.profileImageUrl} alt="" className="h-full w-full object-cover" loading="lazy" /> : null}
+                <ModelImage src={model.profileImageUrl} alt={modelImageAlt(model)} className="h-full w-full object-cover" />
               </div>
               <div className="min-w-0">
                 <p className="truncate text-sm font-black text-white group-hover:text-brand-amber">{model.displayName}</p>
@@ -366,12 +372,11 @@ export function ModelSectionPhotoCard({
   return (
     <Link href={target} className="group block h-full">
       <article className="relative min-h-[260px] overflow-hidden rounded-lg border border-white/10 bg-black transition hover:-translate-y-1 hover:border-brand-amber/60 hover:shadow-gold-glow">
-        {model?.profileImageUrl ? (
-          <img
+        {model ? (
+          <ModelImage
             src={model.profileImageUrl}
             alt={modelImageAlt(model)}
             className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-105"
-            loading="lazy"
           />
         ) : (
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_20%,rgba(34,211,238,0.35),transparent_17rem),linear-gradient(135deg,#020617,#111827)]" />

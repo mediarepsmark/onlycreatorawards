@@ -72,6 +72,7 @@ const cachePath =
 const overridesPath =
   process.env.MODEL_DIRECTORY_OVERRIDES_PATH || path.join(process.cwd(), "data", "model-section-overrides.json");
 const jsonCache = new Map<string, { mtimeMs: number; size: number; value: unknown }>();
+const normalizedModelsCache = new WeakMap<ModelDirectoryCache, ImportedModel[]>();
 
 function readJson<T>(filePath: string, fallback: T): T {
   try {
@@ -91,11 +92,69 @@ function readJson<T>(filePath: string, fallback: T): T {
 }
 
 function titleizeSlug(slug: string) {
+  if (slug === "uncategorized") return "Amateur";
+
   return slug
     .split("-")
     .filter(Boolean)
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
     .join(" ");
+}
+
+function normalizeCategoryText(value: string | null | undefined) {
+  const text = value?.trim();
+  if (!text) return null;
+  return text.toLowerCase() === "uncategorized" ? "Amateur" : text;
+}
+
+function normalizedSection(section: ModelDirectorySection): ModelDirectorySection {
+  return {
+    ...section,
+    label: titleizeSlug(section.slug),
+    href: section.slug === "all" ? "/models" : `/models/category/${section.slug}`
+  };
+}
+
+function audienceCountFromText(value: string | null | undefined) {
+  const text = value?.replace(/,/g, "").trim();
+  if (!text) return 0;
+
+  const match = text.match(/(\d+(?:\.\d+)?)\s*([kmb])?\+?\s*(?:subs?|subscribers?|fans?|followers?)\b/i);
+  if (!match) return 0;
+
+  const parsed = Number(match[1]);
+  if (!Number.isFinite(parsed)) return 0;
+
+  const multiplier = match[2]?.toLowerCase();
+  if (multiplier === "b") return Math.round(parsed * 1_000_000_000);
+  if (multiplier === "m") return Math.round(parsed * 1_000_000);
+  if (multiplier === "k") return Math.round(parsed * 1_000);
+  return Math.round(parsed);
+}
+
+function normalizedCategoryLabels(model: ImportedModel, categorySlugs: string[]) {
+  return categorySlugs.map((slug, index) => normalizeCategoryText(model.categoryLabels[index]) ?? titleizeSlug(slug));
+}
+
+function normalizeImportedModel(model: ImportedModel): ImportedModel {
+  const categorySlugs = model.categorySlugs.length ? model.categorySlugs : ["uncategorized"];
+  const sourceKeywords = model.sourceKeywords.length
+    ? model.sourceKeywords.map((keyword) => normalizeCategoryText(keyword) ?? "Amateur")
+    : normalizedCategoryLabels(model, categorySlugs);
+  const sourceFanCount =
+    model.sourceFanCount ||
+    audienceCountFromText(model.sourceName) ||
+    audienceCountFromText(model.rawDetails) ||
+    0;
+
+  return {
+    ...model,
+    rawCategory: normalizeCategoryText(model.rawCategory),
+    sourceKeywords,
+    categorySlugs,
+    categoryLabels: normalizedCategoryLabels(model, categorySlugs),
+    sourceFanCount
+  };
 }
 
 function emptyCache(): ModelDirectoryCache {
@@ -176,7 +235,13 @@ export function getModelDirectoryCache() {
 }
 
 export function getImportedModels() {
-  return sourceOrdered(getModelDirectoryCache().models.filter(visible));
+  const cache = getModelDirectoryCache();
+  const cached = normalizedModelsCache.get(cache);
+  if (cached) return cached;
+
+  const models = sourceOrdered(cache.models.filter(visible).map(normalizeImportedModel));
+  normalizedModelsCache.set(cache, models);
+  return models;
 }
 
 export function getImportedModelBySlug(slug: string) {
@@ -185,7 +250,7 @@ export function getImportedModelBySlug(slug: string) {
 
 export function getModelDirectorySections() {
   const cache = getModelDirectoryCache();
-  const cachedSections = cache.sections?.length ? cache.sections : [];
+  const cachedSections = cache.sections?.length ? cache.sections.map(normalizedSection) : [];
   const sectionMap = new Map(cachedSections.map((section) => [section.slug, section]));
 
   getImportedModels().forEach((model) => {
@@ -233,6 +298,18 @@ export function getTopImportedModels(limit = 12) {
   return popularityOrdered(getImportedModels()).slice(0, limit);
 }
 
+export function getFeaturedModelForSection(slug: string) {
+  const models = getModelsForSection(slug);
+  return models.find((model) => Boolean(model.profileImageUrl)) ?? models[0];
+}
+
+export function getImportedModelAudienceStat(model: ImportedModel) {
+  if (model.sourceFanCount > 0) return { label: "Fans", value: model.sourceFanCount };
+  if (model.sourceLikeCount > 0) return { label: "Likes", value: model.sourceLikeCount };
+  if (model.sourcePostCount > 0) return { label: "Posts", value: model.sourcePostCount };
+  return { label: "Profile", value: null };
+}
+
 export function getModelDirectoryStats() {
   const cache = getModelDirectoryCache();
   return {
@@ -258,7 +335,7 @@ export function getAdminModelRows(limit = 100) {
       image: model.profileImageUrl ? "source image" : "none",
       price: model.price ?? "",
       updatedAt: model.lastImportedAt,
-      category: model.rawCategory ?? "Uncategorized",
+      category: model.rawCategory ?? "Amateur",
       popularity: model.popularityScore,
       clicks: model.clickCount,
       views: model.viewCount

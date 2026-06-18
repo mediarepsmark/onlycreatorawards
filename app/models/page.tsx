@@ -10,10 +10,10 @@ import { SiteShell } from "@/components/onlycreatorawards/SiteShell";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import {
+  getFeaturedModelForSection,
   getImportedModels,
   getModelDirectorySections,
-  getModelDirectoryStats,
-  getModelsForSection
+  getModelDirectoryStats
 } from "@/lib/onlycreatorawards/modelDirectory";
 import { buildMetadata, itemListSchema } from "@/lib/onlycreatorawards/seo";
 
@@ -68,7 +68,7 @@ export default async function ModelsPage({ searchParams }: ModelsPageProps) {
     .slice(0, 12)
     .map((section) => ({
       section,
-      model: getModelsForSection(section.slug, 1)[0]
+      model: getFeaturedModelForSection(section.slug)
     }));
 
   return (
