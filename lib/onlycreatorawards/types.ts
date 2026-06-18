@@ -204,7 +204,11 @@ export type AdminResourceKey =
   | "seo-indexing"
   | "sitemaps"
   | "analytics"
-  | "rewards";
+  | "rewards"
+  | "models"
+  | "model-sections"
+  | "model-imports"
+  | "blog-posts";
 
 export type AdminResource = {
   key: AdminResourceKey;

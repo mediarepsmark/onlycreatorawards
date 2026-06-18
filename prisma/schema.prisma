@@ -150,6 +150,26 @@ enum TaxStatus {
   COLLECTED
 }
 
+enum ImportedModelStatus {
+  ACTIVE
+  HIDDEN
+  REMOVED
+  NEEDS_REVIEW
+}
+
+enum ImportedModelImageStatus {
+  SOURCE_PROVIDED
+  APPROVED_SAFE
+  REJECTED
+}
+
+enum BlogPostStatus {
+  DRAFT
+  REVIEW
+  PUBLISHED
+  ARCHIVED
+}
+
 model User {
   id                  String               @id @default(cuid())
   email               String               @unique
@@ -521,4 +541,169 @@ model ParticipatingCreatorRewardOptIn {
 
   @@unique([creatorId, campaignId])
   @@index([campaignId, isOptedIn])
+}
+
+model ModelDirectoryImport {
+  id             String    @id @default(cuid())
+  source         String    @default("traffichaus")
+  sourceUrl      String
+  zoneId         String?
+  startedAt      DateTime  @default(now())
+  completedAt    DateTime?
+  status         String    @default("PENDING")
+  rawCount       Int       @default(0)
+  parsedCount    Int       @default(0)
+  truncated      Boolean   @default(false)
+  parser         String?
+  checksum       String?
+  error          String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([source, startedAt])
+  @@index([status])
+}
+
+model ImportedModel {
+  id                 String                    @id @default(cuid())
+  source             String                    @default("traffichaus")
+  sourceExternalId   String?
+  sourceOrder        Int
+  sourceSort         Int?
+  slug               String                    @unique
+  displayName        String
+  sourceName         String
+  username           String?
+  handle             String?
+  profileImageUrl    String?
+  imageAltText       String?
+  imageStatus        ImportedModelImageStatus  @default(SOURCE_PROVIDED)
+  onlyfansUrl        String?
+  clickUrl           String?
+  twitterUrl         String?
+  tiktokUrl          String?
+  instagramUrl       String?
+  price              String?
+  country            String?
+  region             String?
+  city               String?
+  gender             String?
+  rawCategory        String?
+  rawDetails         String?
+  sourceKeywords     Json?
+  categorySlugs      String[]
+  sourceFanCount     Int                       @default(0)
+  sourceLikeCount    Int                       @default(0)
+  sourcePostCount    Int                       @default(0)
+  sourceVideoCount   Int                       @default(0)
+  sourceImageCount   Int                       @default(0)
+  viewCount          Int                       @default(0)
+  clickCount         Int                       @default(0)
+  popularityScore    Float                     @default(0)
+  status             ImportedModelStatus       @default(ACTIVE)
+  lastImportedAt     DateTime?
+  createdAt          DateTime                  @default(now())
+  updatedAt          DateTime                  @updatedAt
+  metrics            ImportedModelMetric[]
+  sectionOverrides   ImportedModelSectionOverride[]
+  blogLinks          BlogPostModelLink[]
+
+  @@unique([source, username])
+  @@index([sourceOrder])
+  @@index([status, popularityScore])
+  @@index([country, region, city])
+}
+
+model ImportedModelMetric {
+  id                 String         @id @default(cuid())
+  modelId            String
+  metricDate         DateTime
+  viewCount          Int            @default(0)
+  clickCount         Int            @default(0)
+  outboundClickCount Int            @default(0)
+  sourceFanCount     Int            @default(0)
+  sourceLikeCount    Int            @default(0)
+  createdAt          DateTime       @default(now())
+  model              ImportedModel  @relation(fields: [modelId], references: [id], onDelete: Cascade)
+
+  @@unique([modelId, metricDate])
+  @@index([metricDate])
+}
+
+model ImportedModelSection {
+  id             String                         @id @default(cuid())
+  slug           String                         @unique
+  title          String
+  description    String?
+  keywordSlugs   String[]
+  isIndexable    Boolean                        @default(false)
+  minModelCount  Int                            @default(10)
+  createdAt      DateTime                       @default(now())
+  updatedAt      DateTime                       @updatedAt
+  overrides      ImportedModelSectionOverride[]
+  blogLinks      BlogPostCategoryLink[]
+
+  @@index([isIndexable])
+}
+
+model ImportedModelSectionOverride {
+  id          String                @id @default(cuid())
+  sectionId   String
+  modelId     String
+  position    Int
+  reason      String?
+  startsAt    DateTime?
+  endsAt      DateTime?
+  createdAt   DateTime              @default(now())
+  updatedAt   DateTime              @updatedAt
+  section     ImportedModelSection   @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  model       ImportedModel          @relation(fields: [modelId], references: [id], onDelete: Cascade)
+
+  @@unique([sectionId, position])
+  @@index([modelId])
+}
+
+model BlogPost {
+  id             String                 @id @default(cuid())
+  slug           String                 @unique
+  title          String
+  description    String
+  body           String
+  status         BlogPostStatus         @default(DRAFT)
+  seoTitle       String?
+  seoDescription String?
+  canonicalUrl   String?
+  publishedAt    DateTime?
+  createdAt      DateTime               @default(now())
+  updatedAt      DateTime               @updatedAt
+  modelLinks     BlogPostModelLink[]
+  categoryLinks  BlogPostCategoryLink[]
+
+  @@index([status, publishedAt])
+}
+
+model BlogPostModelLink {
+  id        String        @id @default(cuid())
+  blogPostId String
+  modelId   String
+  anchorText String?
+  sortOrder Int           @default(0)
+  blogPost  BlogPost      @relation(fields: [blogPostId], references: [id], onDelete: Cascade)
+  model     ImportedModel @relation(fields: [modelId], references: [id], onDelete: Cascade)
+
+  @@unique([blogPostId, modelId])
+  @@index([modelId])
+}
+
+model BlogPostCategoryLink {
+  id         String               @id @default(cuid())
+  blogPostId String
+  sectionId  String
+  anchorText String?
+  sortOrder  Int                  @default(0)
+  blogPost   BlogPost             @relation(fields: [blogPostId], references: [id], onDelete: Cascade)
+  section    ImportedModelSection @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+
+  @@unique([blogPostId, sectionId])
+  @@index([sectionId])
 }

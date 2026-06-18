@@ -9,3 +9,5 @@ node_modules/
 *.log
 *.tsbuildinfo
 tmp/
+data/*.json
+!data/.gitkeep

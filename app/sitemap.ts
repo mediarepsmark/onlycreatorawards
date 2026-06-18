@@ -9,6 +9,8 @@ import {
   getLegalPages,
   getRankingPages
 } from "@/lib/onlycreatorawards/repository";
+import { getBlogPosts } from "@/lib/onlycreatorawards/blog";
+import { getImportedModels, getModelDirectorySections } from "@/lib/onlycreatorawards/modelDirectory";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const now = new Date();
@@ -17,6 +19,9 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "/creators",
     "/categories",
     "/awards",
+    "/models",
+    "/blog",
+    "/seo-ai-criteria",
     ...getAwardYears().map((year) => `/awards/${year}`),
     ...getLegalPages()
       .filter((page) => page.robotsIndex)
@@ -29,6 +34,11 @@ export default function sitemap(): MetadataRoute.Sitemap {
   ];
 
   const creatorUrls = getIndexableCreators().map((creator) => `/creator/${creator.slug}`);
+  const modelUrls = getImportedModels().map((model) => `/model/${model.slug}`);
+  const modelSectionUrls = getModelDirectorySections()
+    .filter((section) => section.count >= 5)
+    .map((section) => `/models/category/${section.slug}`);
+  const blogUrls = getBlogPosts().map((post) => `/blog/${post.slug}`);
   const categoryUrls = getCategories()
     .filter((category) => category.isIndexable)
     .map((category) => `/category/${category.slug}`);
@@ -37,7 +47,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     .filter((page) => page.isIndexable)
     .map((page) => `/${page.slug}`);
 
-  return [...staticUrls, ...creatorUrls, ...categoryUrls, ...awardUrls, ...rankingUrls].map((url) => ({
+  return [...staticUrls, ...creatorUrls, ...modelUrls, ...modelSectionUrls, ...blogUrls, ...categoryUrls, ...awardUrls, ...rankingUrls].map((url) => ({
     url: absoluteUrl(url),
     lastModified: now,
     changeFrequency: "weekly",

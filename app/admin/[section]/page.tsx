@@ -4,6 +4,7 @@ import { Ban, CheckCircle, Download, Gift, Lock, PauseCircle } from "lucide-reac
 import type { LucideIcon } from "lucide-react";
 
 import { AdminResourceTable } from "@/components/onlycreatorawards/AdminResourceTable";
+import { ModelDirectoryAdminPanel } from "@/components/onlycreatorawards/ModelDirectoryAdminPanel";
 import { PageHeader } from "@/components/onlycreatorawards/PageHeader";
 import { RewardLeaderboard } from "@/components/onlycreatorawards/RewardLeaderboard";
 import { SiteShell } from "@/components/onlycreatorawards/SiteShell";
@@ -89,6 +90,7 @@ export default async function AdminSectionPage({ params }: AdminSectionPageProps
   const { section } = await params;
   const { allowed, user } = requireRole(["ADMIN", "MODERATOR"]);
   const resource = getAdminResource(section);
+  const isModelDirectorySection = ["models", "model-sections", "model-imports"].includes(section);
 
   if (!resource) notFound();
 
@@ -110,7 +112,7 @@ export default async function AdminSectionPage({ params }: AdminSectionPageProps
             </Card>
           ) : (
             <>
-              <AdminResourceTable resource={resource} />
+              {isModelDirectorySection ? <ModelDirectoryAdminPanel section={section} /> : <AdminResourceTable resource={resource} />}
               {section === "rewards" ? <RewardsAdminPanel /> : null}
             </>
           )}

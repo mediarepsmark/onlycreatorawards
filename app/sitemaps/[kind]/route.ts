@@ -7,6 +7,8 @@ import {
   getLegalPages,
   getRankingPages
 } from "@/lib/onlycreatorawards/repository";
+import { getBlogPosts } from "@/lib/onlycreatorawards/blog";
+import { getImportedModels, getModelDirectorySections } from "@/lib/onlycreatorawards/modelDirectory";
 
 type SitemapRouteProps = {
   params: Promise<{ kind: string }>;
@@ -49,11 +51,23 @@ function urlsForKind(kind: string) {
       return getRankingPages()
         .filter((page) => page.isIndexable)
         .map((page) => `/${page.slug}`);
+    case "models":
+      return [
+        "/models",
+        ...getImportedModels().map((model) => `/model/${model.slug}`),
+        ...getModelDirectorySections()
+          .filter((section) => section.count >= 5)
+          .map((section) => `/models/category/${section.slug}`)
+      ];
     case "editorial":
       return [
         "/",
         "/creators",
+        "/models",
         "/categories",
+        "/blog",
+        ...getBlogPosts().map((post) => `/blog/${post.slug}`),
+        "/seo-ai-criteria",
         "/claim-profile",
         "/rewards",
         "/rewards/monthly",

@@ -146,7 +146,11 @@ export function getAdminResources() {
     "seo-indexing",
     "sitemaps",
     "analytics",
-    "rewards"
+    "rewards",
+    "models",
+    "model-sections",
+    "model-imports",
+    "blog-posts"
   ];
 
   return [

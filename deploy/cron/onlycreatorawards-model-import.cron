@@ -1,0 +1,1 @@
+17 3 * * * cd /home/httpd/html/onlycreatorawards.com/app && /usr/bin/docker run --rm -v "$PWD:/work" -w /work node:22-bookworm-slim node scripts/sync-traffichaus-models.mjs >> /home/codex_ssh/onlycreatorawards-model-import.log 2>&1

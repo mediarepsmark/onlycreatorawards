@@ -18,6 +18,7 @@ import { siteConfig } from "@/lib/onlycreatorawards/repository";
 
 const primaryNav = [
   { href: "/creators", label: "Creators" },
+  { href: "/models", label: "Models" },
   { href: "/creatorstars", label: "Rankings" },
   { href: "/awards/2026", label: "Awards" },
   { href: "/awards/2026", label: "Vote" },
@@ -26,9 +27,11 @@ const primaryNav = [
 
 const exploreLinks = [
   { href: "/creators", label: "Creators" },
+  { href: "/models", label: "Models" },
   { href: "/creatorstars", label: "Rankings" },
   { href: "/awards", label: "Awards" },
   { href: "/categories", label: "Categories" },
+  { href: "/blog", label: "Blog" },
   { href: "/rewards", label: "Rewards" }
 ];
 
@@ -42,6 +45,7 @@ const participateLinks = [
 
 const aboutLinks = [
   { href: "/content-policy", label: "Content Policy" },
+  { href: "/seo-ai-criteria", label: "SEO Criteria" },
   { href: "/removal-request", label: "Removal Request" },
   { href: "/privacy", label: "Privacy" },
   { href: "/terms", label: "Terms" },

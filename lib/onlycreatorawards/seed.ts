@@ -1020,5 +1020,32 @@ export const adminResources: AdminResource[] = [
       score: item.totalScore,
       eligible: item.isEligible
     }))
+  },
+  {
+    key: "models",
+    label: "Models",
+    description: "Review imported model rows, source order, popularity signals, categories, and outbound links.",
+    rows: [{ state: "Runtime cache", source: "Traffichaus JSON", order: "Preserve source order" }]
+  },
+  {
+    key: "model-sections",
+    label: "Model Sections",
+    description: "Manage section visibility, keyword fill, and manual top-three overrides per category.",
+    rows: [{ state: "Runtime cache", overrides: "Top 3 per section", fill: "Popularity" }]
+  },
+  {
+    key: "model-imports",
+    label: "Model Imports",
+    description: "Monitor the daily Traffichaus import, parser status, cache freshness, and cron command.",
+    rows: [{ cadence: "Daily", source: "Traffichaus", cache: "data/traffichaus-models.json" }]
+  },
+  {
+    key: "blog-posts",
+    label: "Blog Posts",
+    description: "Plan category watchlists, awards editorials, and profile-link content for SEO and AI search.",
+    rows: [
+      { post: "How Creator Awards Watchlists Work", status: "PUBLISHED", links: "Models, sections, profiles" },
+      { post: "Top OnlyFans Category Blog Framework", status: "PUBLISHED", links: "Sections, criteria" }
+    ]
   }
 ];
