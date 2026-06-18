@@ -34,19 +34,18 @@ export function ImportedModelCard({ model, rank }: { model: ImportedModel; rank?
               contentClassName="top-8"
               portraitClassName="h-36 w-36 sm:h-40 sm:w-40"
             />
-            <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/88 via-black/48 to-transparent" />
             {rank ? (
               <Badge className="absolute left-3 top-3 border-brand-amber/50 bg-black/70 text-brand-amber shadow-gold-glow">
                 #{rank}
               </Badge>
             ) : null}
-            <Badge className="absolute bottom-3 left-3 max-w-[calc(100%-1.5rem)] truncate border-brand-cyan/40 bg-black/70 text-brand-cyan">
-              {primaryCategory(model)}
-            </Badge>
           </div>
         </Link>
         <div className="space-y-4 p-5">
           <div>
+            <Badge className="mb-3 max-w-full truncate border-brand-cyan/40 bg-brand-cyan/10 text-brand-cyan">
+              {primaryCategory(model)}
+            </Badge>
             <Link href={`/model/${model.slug}`} className="text-xl font-black text-white transition hover:text-brand-amber">
               {model.displayName}
             </Link>
