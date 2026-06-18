@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 :root {
-  color-scheme: light;
+  color-scheme: dark;
 }
 
 * {
@@ -17,11 +17,13 @@ html {
 body {
   min-width: 320px;
   margin: 0;
-  color: #17211d;
+  color: #f8fafc;
   background:
-    linear-gradient(135deg, rgba(18, 122, 91, 0.08), transparent 34%),
-    linear-gradient(315deg, rgba(36, 107, 206, 0.11), transparent 31%),
-    #eef2f0;
+    radial-gradient(circle at 20% 0%, rgba(168, 85, 247, 0.22), transparent 28rem),
+    radial-gradient(circle at 78% 12%, rgba(34, 211, 238, 0.16), transparent 24rem),
+    linear-gradient(180deg, #05060d 0%, #080a12 46%, #05060d 100%);
+  text-rendering: geometricPrecision;
+  -webkit-font-smoothing: antialiased;
 }
 
 button,
@@ -38,4 +40,9 @@ button {
 pre {
   white-space: pre-wrap;
   word-break: break-word;
+}
+
+::selection {
+  background: rgba(244, 201, 93, 0.34);
+  color: #fff7d6;
 }

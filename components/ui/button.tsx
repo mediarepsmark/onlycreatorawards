@@ -9,10 +9,10 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const variants: Record<ButtonVariant, string> = {
-  default: "bg-brand-green text-white hover:bg-emerald-800",
-  outline: "border border-line bg-white text-ink hover:bg-slate-50",
+  default: "border border-brand-amber bg-gradient-to-b from-[#ffe49a] to-brand-amber text-ink shadow-gold-glow hover:from-white hover:to-[#f7c85c]",
+  outline: "border border-line bg-white text-ink hover:border-brand-amber hover:bg-amber-50",
   ghost: "bg-transparent text-ink hover:bg-slate-50",
-  destructive: "bg-brand-rose text-white hover:bg-rose-800"
+  destructive: "border border-brand-rose/[0.70] bg-brand-rose text-white hover:bg-pink-500"
 };
 
 export function Button({ className, variant = "default", ...props }: ButtonProps) {

@@ -21,14 +21,14 @@ export function CreatorAvatar({ creator, size = "md" }: { creator: CreatorProfil
       <img
         src={creator.profileImageUrl}
         alt={`${creator.displayName} safe public profile`}
-        className={`${sizeClass} rounded-lg object-cover`}
+        className={`${sizeClass} rounded-lg border border-white/[0.15] object-cover shadow-purple-glow`}
       />
     );
   }
 
   return (
     <div
-      className={`${sizeClass} flex shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-ink via-brand-green to-brand-amber font-black text-white shadow-panel`}
+      className={`${sizeClass} flex shrink-0 items-center justify-center rounded-lg border border-brand-amber/40 bg-gradient-to-br from-brand-purple via-brand-rose to-brand-cyan font-black text-white shadow-purple-glow`}
       aria-label={`${creator.displayName} placeholder avatar`}
     >
       {initials(creator.displayName)}
