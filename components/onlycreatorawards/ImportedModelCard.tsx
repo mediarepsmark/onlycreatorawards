@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ArrowUpRight, BadgeCheck, MousePointerClick, Users } from "lucide-react";
 
-import { ModelImage } from "@/components/onlycreatorawards/ModelImage";
+import { ModelPortraitStage } from "@/components/onlycreatorawards/ModelPortraitStage";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { getImportedModelAudienceStat, type ImportedModel } from "@/lib/onlycreatorawards/modelDirectory";
@@ -27,12 +27,14 @@ export function ImportedModelCard({ model, rank }: { model: ImportedModel; rank?
       <CardContent className="p-0">
         <Link href={`/model/${model.slug}`} className="block">
           <div className="relative aspect-[4/5] overflow-hidden bg-gradient-to-br from-brand-purple/30 via-black to-brand-cyan/20">
-            <ModelImage
+            <ModelPortraitStage
               src={model.profileImageUrl}
               alt={model.imageAltText || `${model.displayName} profile`}
-              className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+              className="absolute inset-0 transition duration-500 group-hover:scale-[1.01]"
+              contentClassName="top-8"
+              portraitClassName="h-36 w-36 sm:h-40 sm:w-40"
             />
-            <div className="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-black via-black/70 to-transparent" />
+            <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/88 via-black/48 to-transparent" />
             {rank ? (
               <Badge className="absolute left-3 top-3 border-brand-amber/50 bg-black/70 text-brand-amber shadow-gold-glow">
                 #{rank}

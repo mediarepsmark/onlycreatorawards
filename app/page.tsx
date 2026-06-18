@@ -88,8 +88,8 @@ export default function HomePage() {
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_66%_34%,rgba(244,201,93,0.16),transparent_14rem),linear-gradient(90deg,#05060d_0%,rgba(5,6,13,0.92)_32%,rgba(5,6,13,0.45)_70%,#05060d_100%)]" />
           <div className="absolute inset-x-0 bottom-0 h-44 bg-gradient-to-t from-midnight to-transparent" />
         </div>
-        <div className="relative mx-auto grid min-h-[720px] max-w-7xl gap-10 px-4 py-14 sm:px-6 lg:grid-cols-[1fr_0.92fr] lg:items-center lg:px-8">
-          <div>
+        <div className="relative mx-auto grid min-h-[720px] max-w-7xl gap-10 px-4 py-10 sm:px-6 lg:grid-cols-[1fr_0.92fr] lg:items-center lg:px-8 lg:py-14">
+          <div className="order-2 lg:order-1">
             <Badge className="border-brand-amber/[0.45] bg-black/[0.35] text-brand-amber backdrop-blur">
               <Sparkles className="mr-2 h-4 w-4" aria-hidden="true" />
               Celebrating creativity. Powering discovery.
@@ -131,7 +131,7 @@ export default function HomePage() {
               ))}
             </div>
           </div>
-          <div className="pb-12 lg:pb-10">
+          <div className="order-1 pb-4 pt-2 lg:order-2 lg:pb-10 lg:pt-0">
             {heroModels.length ? <ModelHeroStack models={heroModels} /> : null}
           </div>
         </div>

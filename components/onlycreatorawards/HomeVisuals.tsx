@@ -29,6 +29,7 @@ import {
 
 import { CreatorAvatar } from "@/components/onlycreatorawards/CreatorAvatar";
 import { ModelImage } from "@/components/onlycreatorawards/ModelImage";
+import { ModelPortraitStage } from "@/components/onlycreatorawards/ModelPortraitStage";
 import { Badge } from "@/components/ui/badge";
 import { getImportedModelAudienceStat, type ImportedModel, type ModelDirectorySection } from "@/lib/onlycreatorawards/modelDirectory";
 import { getCreatorStarsLevel } from "@/lib/onlycreatorawards/scoring";
@@ -92,6 +93,9 @@ function compactNumber(value: number) {
 function modelImageAlt(model: ImportedModel) {
   return model.imageAltText || `${model.displayName} profile`;
 }
+
+const clearPortraitImageClass =
+  "object-cover object-top brightness-110 contrast-110 saturate-125 [image-rendering:auto]";
 
 function audienceDisplay(model: ImportedModel) {
   const audience = getImportedModelAudienceStat(model);
@@ -216,18 +220,20 @@ export function FeaturedModelPhotoCard({ model, rank }: { model: ImportedModel; 
   return (
     <Link href={`/model/${model.slug}`} className="group block h-full">
       <article className="relative min-h-[340px] overflow-hidden rounded-lg border border-white/[0.12] bg-black transition hover:-translate-y-1 hover:border-brand-amber/60 hover:shadow-gold-glow">
-        <ModelImage
+        <ModelPortraitStage
           src={model.profileImageUrl}
           alt={modelImageAlt(model)}
-          className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-105"
+          className="absolute inset-0 transition duration-500 group-hover:scale-[1.01]"
+          contentClassName="top-12"
+          portraitClassName="h-40 w-40 sm:h-44 sm:w-44"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/48 to-black/5" />
+        <div className="absolute inset-x-0 bottom-0 h-44 bg-gradient-to-t from-black/82 via-black/28 to-transparent" />
         <div className="absolute left-4 top-4 flex gap-2">
           <Badge className="border-brand-amber/50 bg-black/70 text-brand-amber">#{rank}</Badge>
           <Badge className="border-brand-cyan/40 bg-black/70 text-brand-cyan">Live feed</Badge>
         </div>
         <div className="absolute inset-x-0 bottom-0 p-4">
-          <div className="rounded-lg border border-white/10 bg-black/55 p-4 backdrop-blur">
+          <div className="rounded-lg border border-white/10 bg-black/68 p-4 shadow-[0_18px_50px_rgba(0,0,0,0.36)] backdrop-blur-sm">
             <div className="flex items-end justify-between gap-3">
               <div className="min-w-0">
                 <h3 className="truncate text-2xl font-black text-white group-hover:text-brand-amber">{model.displayName}</h3>
@@ -272,7 +278,7 @@ export function ModelLeaderboardCard({ model, rank }: { model: ImportedModel; ra
           {rank}
         </div>
         <div className="relative h-14 w-14 overflow-hidden rounded-lg border border-white/10 bg-black">
-          <ModelImage src={model.profileImageUrl} alt={modelImageAlt(model)} className="h-full w-full object-cover" />
+          <ModelImage src={model.profileImageUrl} alt={modelImageAlt(model)} className={`h-full w-full ${clearPortraitImageClass}`} />
         </div>
         <div className="min-w-0">
           <h3 className="truncate font-black text-white group-hover:text-brand-amber">{model.displayName}</h3>
@@ -300,21 +306,23 @@ export function ModelHeroStack({ models }: { models: ImportedModel[] }) {
   const primaryAudience = audienceDisplay(primary);
 
   return (
-    <div className="relative ml-auto max-w-[500px]">
+    <div className="relative mx-auto max-w-[500px] lg:ml-auto lg:mr-0">
       <div className="absolute -left-8 top-10 h-36 w-36 rounded-full bg-brand-purple/25 blur-3xl" />
       <div className="absolute -right-8 bottom-10 h-36 w-36 rounded-full bg-brand-cyan/20 blur-3xl" />
       <Link href={`/model/${primary.slug}`} className="group relative block overflow-hidden rounded-lg border border-brand-amber/40 bg-black shadow-gold-glow">
         <div className="relative aspect-[0.88]">
-          <ModelImage
+          <ModelPortraitStage
             src={primary.profileImageUrl}
             alt={modelImageAlt(primary)}
-            className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-105"
+            className="absolute inset-0 transition duration-500 group-hover:scale-[1.008]"
+            contentClassName="top-16"
+            portraitClassName="h-52 w-52 sm:h-60 sm:w-60"
             loading="eager"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/35 to-transparent" />
+          <div className="absolute inset-x-0 bottom-0 h-72 bg-gradient-to-t from-black/82 via-black/24 to-transparent" />
           <Badge className="absolute left-4 top-4 border-brand-amber/50 bg-black/70 text-brand-amber">Featured profile</Badge>
           <div className="absolute inset-x-0 bottom-0 p-5">
-            <div className="rounded-lg border border-white/10 bg-black/60 p-5 backdrop-blur">
+            <div className="rounded-lg border border-white/10 bg-black/68 p-5 shadow-[0_18px_50px_rgba(0,0,0,0.38)] backdrop-blur-sm">
               <p className="text-xs font-black uppercase tracking-[0.18em] text-brand-cyan">Live from the feed</p>
               <h2 className="mt-2 text-3xl font-black text-white group-hover:text-brand-amber">{primary.displayName}</h2>
               <div className="mt-4 grid grid-cols-3 gap-2 text-center text-xs font-black">
@@ -344,7 +352,7 @@ export function ModelHeroStack({ models }: { models: ImportedModel[] }) {
           >
             <div className="flex items-center gap-3">
               <div className="h-14 w-14 shrink-0 overflow-hidden rounded-lg bg-white/10">
-                <ModelImage src={model.profileImageUrl} alt={modelImageAlt(model)} className="h-full w-full object-cover" />
+                <ModelImage src={model.profileImageUrl} alt={modelImageAlt(model)} className={`h-full w-full ${clearPortraitImageClass}`} />
               </div>
               <div className="min-w-0">
                 <p className="truncate text-sm font-black text-white group-hover:text-brand-amber">{model.displayName}</p>
@@ -373,17 +381,19 @@ export function ModelSectionPhotoCard({
     <Link href={target} className="group block h-full">
       <article className="relative min-h-[260px] overflow-hidden rounded-lg border border-white/10 bg-black transition hover:-translate-y-1 hover:border-brand-amber/60 hover:shadow-gold-glow">
         {model ? (
-          <ModelImage
+          <ModelPortraitStage
             src={model.profileImageUrl}
             alt={modelImageAlt(model)}
-            className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-105"
+            className="absolute inset-0 transition duration-500 group-hover:scale-[1.01]"
+            contentClassName="top-9"
+            portraitClassName="h-36 w-36 sm:h-40 sm:w-40"
           />
         ) : (
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_20%,rgba(34,211,238,0.35),transparent_17rem),linear-gradient(135deg,#020617,#111827)]" />
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/36 to-black/5" />
+        <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-black/82 via-black/30 to-transparent" />
         <div className="absolute inset-x-0 bottom-0 p-4">
-          <div className="rounded-lg border border-white/10 bg-black/58 p-4 backdrop-blur">
+          <div className="rounded-lg border border-white/10 bg-black/68 p-4 shadow-[0_18px_50px_rgba(0,0,0,0.34)] backdrop-blur-sm">
             <div className="flex items-end justify-between gap-3">
               <div className="min-w-0">
                 <p className="text-xs font-black uppercase tracking-[0.18em] text-brand-amber">Section</p>

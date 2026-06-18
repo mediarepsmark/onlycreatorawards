@@ -5,7 +5,7 @@ import type { LucideIcon } from "lucide-react";
 
 import { ImportedModelCard } from "@/components/onlycreatorawards/ImportedModelCard";
 import { JsonLd } from "@/components/onlycreatorawards/JsonLd";
-import { ModelImage } from "@/components/onlycreatorawards/ModelImage";
+import { ModelPortraitStage } from "@/components/onlycreatorawards/ModelPortraitStage";
 import { PageHeader } from "@/components/onlycreatorawards/PageHeader";
 import { SiteShell } from "@/components/onlycreatorawards/SiteShell";
 import { Badge } from "@/components/ui/badge";
@@ -84,10 +84,13 @@ export default async function ModelProfilePage({ params }: ModelPageProps) {
           <Card className="overflow-hidden border-white/10 bg-white/[0.045] text-white">
             <CardContent className="p-0">
               <div className="relative aspect-[4/5] bg-gradient-to-br from-brand-purple/30 via-black to-brand-cyan/20">
-                <ModelImage
+                <ModelPortraitStage
                   src={model.profileImageUrl}
                   alt={model.imageAltText || `${model.displayName} profile`}
-                  className="h-full w-full object-cover"
+                  className="absolute inset-0"
+                  contentClassName="top-1/2 -translate-y-1/2"
+                  portraitClassName="h-52 w-52 sm:h-64 sm:w-64"
+                  loading="eager"
                 />
                 <Badge className="absolute left-4 top-4 border-brand-amber/50 bg-black/70 text-brand-amber">
                   Source #{model.sourceOrder}
