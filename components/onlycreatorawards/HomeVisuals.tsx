@@ -29,6 +29,7 @@ import {
 
 import { CreatorAvatar } from "@/components/onlycreatorawards/CreatorAvatar";
 import { Badge } from "@/components/ui/badge";
+import type { ImportedModel, ModelDirectorySection } from "@/lib/onlycreatorawards/modelDirectory";
 import { getCreatorStarsLevel } from "@/lib/onlycreatorawards/scoring";
 import type { Award as AwardType, CreatorProfile } from "@/lib/onlycreatorawards/types";
 
@@ -78,6 +79,17 @@ function labelFromSlug(slug: string) {
     .replace(/-/g, " ")
     .replace(/\b\w/g, (letter) => letter.toUpperCase())
     .replace(" Creators", "");
+}
+
+function compactNumber(value: number) {
+  return Intl.NumberFormat("en", {
+    notation: "compact",
+    maximumFractionDigits: 1
+  }).format(value);
+}
+
+function modelImageAlt(model: ImportedModel) {
+  return model.imageAltText || `${model.displayName} profile`;
 }
 
 export function SectionHeader({
@@ -181,6 +193,204 @@ export function SpotlightCreatorCard({ creator, rank }: { creator: CreatorProfil
             <Star className="h-4 w-4 fill-brand-amber" aria-hidden="true" />
             {creator.creatorStarsScore}
           </span>
+        </div>
+      </article>
+    </Link>
+  );
+}
+
+export function FeaturedModelPhotoCard({ model, rank }: { model: ImportedModel; rank: number }) {
+  const outboundUrl = model.onlyfansUrl || model.clickUrl;
+
+  return (
+    <Link href={`/model/${model.slug}`} className="group block h-full">
+      <article className="relative min-h-[340px] overflow-hidden rounded-lg border border-white/[0.12] bg-black transition hover:-translate-y-1 hover:border-brand-amber/60 hover:shadow-gold-glow">
+        {model.profileImageUrl ? (
+          <img
+            src={model.profileImageUrl}
+            alt={modelImageAlt(model)}
+            className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-105"
+            loading="lazy"
+          />
+        ) : (
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_20%,rgba(168,85,247,0.42),transparent_18rem),linear-gradient(135deg,#111827,#020617)]" />
+        )}
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/48 to-black/5" />
+        <div className="absolute left-4 top-4 flex gap-2">
+          <Badge className="border-brand-amber/50 bg-black/70 text-brand-amber">#{rank}</Badge>
+          <Badge className="border-brand-cyan/40 bg-black/70 text-brand-cyan">Live feed</Badge>
+        </div>
+        <div className="absolute inset-x-0 bottom-0 p-4">
+          <div className="rounded-lg border border-white/10 bg-black/55 p-4 backdrop-blur">
+            <div className="flex items-end justify-between gap-3">
+              <div className="min-w-0">
+                <h3 className="truncate text-2xl font-black text-white group-hover:text-brand-amber">{model.displayName}</h3>
+                <p className="mt-1 truncate text-sm font-bold text-white/60">{model.handle ?? "Imported profile"}</p>
+              </div>
+              <div className="shrink-0 text-right">
+                <p className="text-xl font-black text-brand-amber">{compactNumber(model.sourceFanCount)}</p>
+                <p className="text-xs font-black uppercase tracking-normal text-white/45">Fans</p>
+              </div>
+            </div>
+            <div className="mt-4 flex flex-wrap gap-2">
+              {model.categoryLabels.slice(0, 2).map((label) => (
+                <Badge key={`${model.slug}-${label}`} className="border-white/10 bg-white/[0.08] text-white/70">
+                  {label}
+                </Badge>
+              ))}
+            </div>
+            {outboundUrl ? (
+              <span className="mt-4 inline-flex min-h-10 items-center gap-2 rounded-lg bg-brand-amber px-4 text-sm font-black text-ink">
+                View profile
+                <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
+              </span>
+            ) : null}
+          </div>
+        </div>
+      </article>
+    </Link>
+  );
+}
+
+export function ModelLeaderboardCard({ model, rank }: { model: ImportedModel; rank: number }) {
+  const isWinnerSlot = rank <= 3;
+
+  return (
+    <Link href={`/model/${model.slug}`} className="group block">
+      <article
+        className={`grid min-h-24 grid-cols-[42px_56px_1fr_auto] items-center gap-3 rounded-lg border bg-white/[0.045] p-3 transition hover:-translate-y-0.5 ${
+          isWinnerSlot ? "border-brand-amber/[0.55] shadow-gold-glow" : "border-white/[0.14] hover:border-brand-cyan/[0.55]"
+        }`}
+      >
+        <div className={`flex h-full items-start justify-center rounded-lg pt-2 text-xl font-black ${isWinnerSlot ? "bg-brand-amber text-ink" : "bg-white/[0.08] text-white"}`}>
+          {rank}
+        </div>
+        <div className="relative h-14 w-14 overflow-hidden rounded-lg border border-white/10 bg-black">
+          {model.profileImageUrl ? <img src={model.profileImageUrl} alt="" className="h-full w-full object-cover" loading="lazy" /> : null}
+        </div>
+        <div className="min-w-0">
+          <h3 className="truncate font-black text-white group-hover:text-brand-amber">{model.displayName}</h3>
+          <p className="truncate text-xs font-bold text-white/50">{model.categoryLabels[0] ?? "Model"}</p>
+        </div>
+        <div className="text-right">
+          <div className="text-xl font-black text-white">{Math.round(model.popularityScore).toLocaleString()}</div>
+          <div className="inline-flex items-center gap-1 text-xs font-bold text-brand-amber">
+            <Star className="h-3.5 w-3.5 fill-brand-amber" aria-hidden="true" />
+            Pop
+          </div>
+        </div>
+      </article>
+    </Link>
+  );
+}
+
+export function ModelHeroStack({ models }: { models: ImportedModel[] }) {
+  const [primary, second, third] = models;
+
+  if (!primary) {
+    return null;
+  }
+
+  return (
+    <div className="relative ml-auto max-w-[500px]">
+      <div className="absolute -left-8 top-10 h-36 w-36 rounded-full bg-brand-purple/25 blur-3xl" />
+      <div className="absolute -right-8 bottom-10 h-36 w-36 rounded-full bg-brand-cyan/20 blur-3xl" />
+      <Link href={`/model/${primary.slug}`} className="group relative block overflow-hidden rounded-lg border border-brand-amber/40 bg-black shadow-gold-glow">
+        <div className="relative aspect-[0.88]">
+          {primary.profileImageUrl ? (
+            <img
+              src={primary.profileImageUrl}
+              alt={modelImageAlt(primary)}
+              className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-105"
+              loading="eager"
+            />
+          ) : null}
+          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/35 to-transparent" />
+          <Badge className="absolute left-4 top-4 border-brand-amber/50 bg-black/70 text-brand-amber">Featured profile</Badge>
+          <div className="absolute inset-x-0 bottom-0 p-5">
+            <div className="rounded-lg border border-white/10 bg-black/60 p-5 backdrop-blur">
+              <p className="text-xs font-black uppercase tracking-[0.18em] text-brand-cyan">Live from the feed</p>
+              <h2 className="mt-2 text-3xl font-black text-white group-hover:text-brand-amber">{primary.displayName}</h2>
+              <div className="mt-4 grid grid-cols-3 gap-2 text-center text-xs font-black">
+                <div className="rounded-lg border border-white/10 bg-white/[0.06] p-2">
+                  <p className="text-lg text-brand-amber">{compactNumber(primary.sourceFanCount)}</p>
+                  <p className="text-white/45">Fans</p>
+                </div>
+                <div className="rounded-lg border border-white/10 bg-white/[0.06] p-2">
+                  <p className="text-lg text-brand-cyan">{compactNumber(primary.clickCount)}</p>
+                  <p className="text-white/45">Clicks</p>
+                </div>
+                <div className="rounded-lg border border-white/10 bg-white/[0.06] p-2">
+                  <p className="text-lg text-brand-rose">{primary.sourceOrder}</p>
+                  <p className="text-white/45">Feed</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </Link>
+      <div className="absolute -bottom-6 left-6 right-6 grid grid-cols-2 gap-3">
+        {[second, third].filter(Boolean).map((model) => (
+          <Link
+            key={model.slug}
+            href={`/model/${model.slug}`}
+            className="group min-w-0 overflow-hidden rounded-lg border border-white/10 bg-black/70 p-2 backdrop-blur transition hover:border-brand-cyan/60"
+          >
+            <div className="flex items-center gap-3">
+              <div className="h-14 w-14 shrink-0 overflow-hidden rounded-lg bg-white/10">
+                {model.profileImageUrl ? <img src={model.profileImageUrl} alt="" className="h-full w-full object-cover" loading="lazy" /> : null}
+              </div>
+              <div className="min-w-0">
+                <p className="truncate text-sm font-black text-white group-hover:text-brand-amber">{model.displayName}</p>
+                <p className="truncate text-xs font-bold text-white/45">{model.categoryLabels[0] ?? "Profile"}</p>
+              </div>
+            </div>
+          </Link>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+export function ModelSectionPhotoCard({
+  section,
+  model,
+  href
+}: {
+  section: ModelDirectorySection;
+  model?: ImportedModel;
+  href?: string;
+}) {
+  const target = href ?? section.href;
+
+  return (
+    <Link href={target} className="group block h-full">
+      <article className="relative min-h-[260px] overflow-hidden rounded-lg border border-white/10 bg-black transition hover:-translate-y-1 hover:border-brand-amber/60 hover:shadow-gold-glow">
+        {model?.profileImageUrl ? (
+          <img
+            src={model.profileImageUrl}
+            alt={modelImageAlt(model)}
+            className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-105"
+            loading="lazy"
+          />
+        ) : (
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_20%,rgba(34,211,238,0.35),transparent_17rem),linear-gradient(135deg,#020617,#111827)]" />
+        )}
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/36 to-black/5" />
+        <div className="absolute inset-x-0 bottom-0 p-4">
+          <div className="rounded-lg border border-white/10 bg-black/58 p-4 backdrop-blur">
+            <div className="flex items-end justify-between gap-3">
+              <div className="min-w-0">
+                <p className="text-xs font-black uppercase tracking-[0.18em] text-brand-amber">Section</p>
+                <h3 className="mt-1 truncate text-2xl font-black text-white group-hover:text-brand-amber">{section.label}</h3>
+                {model ? <p className="mt-1 truncate text-sm font-bold text-white/55">Featured: {model.displayName}</p> : null}
+              </div>
+              <div className="shrink-0 rounded-lg border border-white/10 bg-white/[0.08] px-3 py-2 text-center">
+                <p className="text-lg font-black text-brand-cyan">{compactNumber(section.count)}</p>
+                <p className="text-[10px] font-black uppercase tracking-normal text-white/45">Models</p>
+              </div>
+            </div>
+          </div>
         </div>
       </article>
     </Link>

@@ -4,6 +4,7 @@ import { Pin, TrendingUp } from "lucide-react";
 
 import { ImportedModelCard } from "@/components/onlycreatorawards/ImportedModelCard";
 import { JsonLd } from "@/components/onlycreatorawards/JsonLd";
+import { ModelSectionPhotoCard } from "@/components/onlycreatorawards/HomeVisuals";
 import { PageHeader } from "@/components/onlycreatorawards/PageHeader";
 import { SiteShell } from "@/components/onlycreatorawards/SiteShell";
 import { Badge } from "@/components/ui/badge";
@@ -51,6 +52,7 @@ export default async function ModelCategoryPage({ params, searchParams }: ModelC
   const totalPages = Math.max(1, Math.ceil(models.length / pageSize));
   const currentPage = Math.min(page, totalPages);
   const pageModels = models.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+  const topModel = models[0];
 
   if (!section || (!models.length && slug !== "uncategorized")) notFound();
 
@@ -67,17 +69,21 @@ export default async function ModelCategoryPage({ params, searchParams }: ModelC
         title={`${section.label} models`}
         description="Sections can pin up to three models manually. The remaining results fill by popularity signals, clicks, views, source stats, and feed order."
       >
-        <Card className="border-white/10 bg-white/[0.06] text-white">
-          <CardContent>
-            <div className="flex items-center gap-3">
-              <TrendingUp className="h-8 w-8 text-brand-cyan" aria-hidden="true" />
-              <div>
-                <p className="text-2xl font-black">{models.length.toLocaleString()}</p>
-                <p className="text-sm font-bold text-white/60">models in this section</p>
+        {topModel ? (
+          <ModelSectionPhotoCard section={section} model={topModel} href={`/model/${topModel.slug}`} />
+        ) : (
+          <Card className="border-white/10 bg-white/[0.06] text-white">
+            <CardContent>
+              <div className="flex items-center gap-3">
+                <TrendingUp className="h-8 w-8 text-brand-cyan" aria-hidden="true" />
+                <div>
+                  <p className="text-2xl font-black">{models.length.toLocaleString()}</p>
+                  <p className="text-sm font-bold text-white/60">models in this section</p>
+                </div>
               </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        )}
       </PageHeader>
 
       <section className="bg-[#05070d] py-10 text-white">

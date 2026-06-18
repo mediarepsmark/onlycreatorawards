@@ -4,6 +4,7 @@ import type { LucideIcon } from "lucide-react";
 
 import { ImportedModelCard } from "@/components/onlycreatorawards/ImportedModelCard";
 import { JsonLd } from "@/components/onlycreatorawards/JsonLd";
+import { ModelSectionPhotoCard } from "@/components/onlycreatorawards/HomeVisuals";
 import { PageHeader } from "@/components/onlycreatorawards/PageHeader";
 import { SiteShell } from "@/components/onlycreatorawards/SiteShell";
 import { Badge } from "@/components/ui/badge";
@@ -11,7 +12,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import {
   getImportedModels,
   getModelDirectorySections,
-  getModelDirectoryStats
+  getModelDirectoryStats,
+  getModelsForSection
 } from "@/lib/onlycreatorawards/modelDirectory";
 import { buildMetadata, itemListSchema } from "@/lib/onlycreatorawards/seo";
 
@@ -61,7 +63,13 @@ export default async function ModelsPage({ searchParams }: ModelsPageProps) {
   const currentPage = Math.min(page, totalPages);
   const pageModels = models.slice((currentPage - 1) * pageSize, currentPage * pageSize);
   const stats = getModelDirectoryStats();
-  const sections = getModelDirectorySections().slice(0, 16);
+  const sections = getModelDirectorySections()
+    .filter((section) => section.count >= 5)
+    .slice(0, 12)
+    .map((section) => ({
+      section,
+      model: getModelsForSection(section.slug, 1)[0]
+    }));
 
   return (
     <SiteShell>
@@ -122,15 +130,9 @@ export default async function ModelsPage({ searchParams }: ModelsPageProps) {
                   Blog playbooks
                 </Link>
               </div>
-              <div className="flex flex-wrap gap-2">
-                {sections.map((section) => (
-                  <Link
-                    key={section.slug}
-                    href={section.href}
-                    className="rounded-lg border border-white/10 bg-white/[0.05] px-3 py-2 text-sm font-black text-white/70 transition hover:border-brand-cyan/60 hover:text-brand-cyan"
-                  >
-                    {section.label} <span className="text-white/35">({section.count})</span>
-                  </Link>
+              <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+                {sections.map(({ section, model }) => (
+                  <ModelSectionPhotoCard key={section.slug} section={section} model={model} />
                 ))}
               </div>
             </div>

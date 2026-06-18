@@ -5,8 +5,11 @@ import { ArrowUpRight, Crown, Sparkles, Trophy, Vote } from "lucide-react";
 
 import {
   AwardCard,
-  CategoryCard,
+  FeaturedModelPhotoCard,
   LeaderboardCard,
+  ModelHeroStack,
+  ModelLeaderboardCard,
+  ModelSectionPhotoCard,
   RewardsCTASection,
   SectionHeader,
   SpotlightCreatorCard,
@@ -20,8 +23,16 @@ import { JsonLd } from "@/components/onlycreatorawards/JsonLd";
 import { SearchPanel } from "@/components/onlycreatorawards/SearchPanel";
 import { SiteShell } from "@/components/onlycreatorawards/SiteShell";
 import { Badge } from "@/components/ui/badge";
+import {
+  getModelDirectorySections,
+  getModelDirectoryStats,
+  getModelsForSection,
+  getTopImportedModels
+} from "@/lib/onlycreatorawards/modelDirectory";
 import { getAwardYears, getAwards, getCreators, siteConfig } from "@/lib/onlycreatorawards/repository";
 import { buildMetadata, organizationSchema, websiteSchema } from "@/lib/onlycreatorawards/seo";
+
+export const dynamic = "force-dynamic";
 
 export const metadata = buildMetadata({
   title: "OnlyCreatorAwards | Creator Awards and Discovery Engine",
@@ -31,6 +42,17 @@ export const metadata = buildMetadata({
 });
 
 export default function HomePage() {
+  const modelStats = getModelDirectoryStats();
+  const featuredModels = getTopImportedModels(12);
+  const heroModels = featuredModels.slice(0, 3);
+  const modelLeaderboard = featuredModels.slice(0, 5);
+  const modelSections = getModelDirectorySections()
+    .filter((section) => section.count >= 5)
+    .slice(0, 8)
+    .map((section) => ({
+      section,
+      model: getModelsForSection(section.slug, 1)[0]
+    }));
   const creators = getCreators()
     .filter((creator) => creator.status === "PUBLISHED")
     .sort((first, second) => second.creatorStarsScore - first.creatorStarsScore);
@@ -38,6 +60,17 @@ export default function HomePage() {
   const leaderboardCreators = creators.slice(0, 5);
   const awards = getAwards(2026).slice(0, 5);
   const awardYear = getAwardYears()[0] ?? 2026;
+  const dynamicStats = homepageStats.map((stat) => {
+    if (stat.label === "Creators" && modelStats.parsedCount) {
+      return { ...stat, value: `${Intl.NumberFormat("en", { notation: "compact", maximumFractionDigits: 1 }).format(modelStats.parsedCount)}+` };
+    }
+
+    if (stat.label === "Categories" && modelStats.sectionCount) {
+      return { ...stat, value: String(modelStats.sectionCount) };
+    }
+
+    return stat;
+  });
 
   return (
     <SiteShell>
@@ -79,11 +112,11 @@ export default function HomePage() {
                 Vote Now
               </Link>
               <Link
-                href="/creators"
+                href="/models"
                 className="inline-flex min-h-12 items-center gap-2 rounded-lg border border-brand-amber/50 bg-black/[0.26] px-5 font-black text-white transition hover:bg-brand-amber/10 hover:text-brand-amber"
               >
                 <ArrowUpRight className="h-5 w-5" aria-hidden="true" />
-                Explore Creators
+                Explore Models
               </Link>
             </div>
             <div className="mt-8 max-w-[520px]">
@@ -98,45 +131,42 @@ export default function HomePage() {
               ))}
             </div>
           </div>
-          <div className="hidden lg:block">
-            <div className="relative ml-auto aspect-[0.9] max-w-[440px] rounded-lg border border-brand-amber/30 bg-black/[0.28] p-6 shadow-purple-glow backdrop-blur">
-              <div className="absolute -left-10 top-12 h-36 w-36 rounded-full bg-brand-purple/20 blur-3xl" />
-              <div className="absolute -right-10 bottom-12 h-36 w-36 rounded-full bg-brand-cyan/[0.15] blur-3xl" />
-              <div className="relative flex h-full flex-col justify-between rounded-lg border border-white/10 bg-white/[0.04] p-6">
-                <div className="flex items-center justify-between">
-                  <Badge className="border-brand-cyan/[0.45] bg-brand-cyan/10 text-brand-cyan">Live awards season</Badge>
-                  <Crown className="h-8 w-8 text-brand-amber" aria-hidden="true" />
-                </div>
-                <div className="mx-auto flex h-44 w-44 items-center justify-center rounded-lg border border-brand-amber/[0.45] bg-brand-amber/10 shadow-gold-glow">
-                  <Trophy className="h-24 w-24 text-brand-amber" aria-hidden="true" />
-                </div>
-                <div className="rounded-lg border border-brand-purple/[0.45] bg-black/[0.38] p-5">
-                  <p className="text-2xl font-black uppercase leading-tight text-white">
-                    Creators inspire.
-                    <span className="block text-brand-rose">Communities ignite.</span>
-                  </p>
-                  <div className="mt-5 grid grid-cols-2 gap-3">
-                    <div className="rounded-lg border border-white/10 bg-white/[0.04] p-3">
-                      <p className="text-xs font-bold text-white/[0.48]">Top Score</p>
-                      <p className="text-2xl font-black text-brand-amber">{leaderboardCreators[0]?.creatorStarsScore ?? 98}</p>
-                    </div>
-                    <div className="rounded-lg border border-white/10 bg-white/[0.04] p-3">
-                      <p className="text-xs font-bold text-white/[0.48]">Voting</p>
-                      <p className="text-2xl font-black text-brand-cyan">Open</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
+          <div className="pb-12 lg:pb-10">
+            {heroModels.length ? <ModelHeroStack models={heroModels} /> : null}
           </div>
         </div>
       </section>
 
       <section className="relative bg-midnight px-4 sm:px-6 lg:px-8">
         <div className="mx-auto -mt-12 grid max-w-7xl overflow-hidden rounded-lg border border-brand-amber/[0.42] bg-black/[0.54] shadow-gold-glow backdrop-blur md:grid-cols-4">
-          {homepageStats.map((stat) => (
+          {dynamicStats.map((stat) => (
             <StatCard key={stat.label} {...stat} />
           ))}
+        </div>
+      </section>
+
+      <section className="bg-midnight py-12">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <SectionHeader
+            eyebrow="Live model profiles"
+            title="Featured from the feed"
+            description="Imported profiles now sit front and center, with images, categories, popularity signals, and direct profile pages."
+            href="/models"
+            linkLabel="Explore All Models"
+          />
+          {featuredModels.length ? (
+            <div className="mt-6 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+              {featuredModels.slice(0, 8).map((model, index) => (
+                <FeaturedModelPhotoCard key={model.id} model={model} rank={index + 1} />
+              ))}
+            </div>
+          ) : (
+            <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+              {trendingCreators.map((creator, index) => (
+                <SpotlightCreatorCard key={creator.id} creator={creator} rank={index + 1} />
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
@@ -159,17 +189,25 @@ export default function HomePage() {
       <section className="bg-midnight py-10">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <SectionHeader
-            eyebrow="Trending creators"
-            title="Creators moving the room"
-            description="A PG-safe spotlight powered by CreatorStars, verified links, fan votes, award momentum, and profile quality."
-            href="/creators"
-            linkLabel="Explore All Creators"
+            eyebrow="Trending models"
+            title="Profiles getting attention"
+            description="A live spotlight powered by the imported feed, source popularity, clicks, views, and category relevance."
+            href="/models"
+            linkLabel="Explore All Models"
           />
-          <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-            {trendingCreators.map((creator, index) => (
-              <SpotlightCreatorCard key={creator.id} creator={creator} rank={index + 1} />
-            ))}
-          </div>
+          {featuredModels.length ? (
+            <div className="mt-6 grid gap-4 lg:grid-cols-5">
+              {modelLeaderboard.map((model, index) => (
+                <ModelLeaderboardCard key={model.id} model={model} rank={index + 1} />
+              ))}
+            </div>
+          ) : (
+            <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+              {trendingCreators.map((creator, index) => (
+                <SpotlightCreatorCard key={creator.id} creator={creator} rank={index + 1} />
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
@@ -192,12 +230,28 @@ export default function HomePage() {
 
       <section className="bg-midnight py-10">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <SectionHeader eyebrow="Browse by category" title="Find the next fan favorite" href="/categories" linkLabel="Browse Categories" />
-          <div className="mt-6 grid grid-cols-2 gap-4 md:grid-cols-4 lg:grid-cols-8">
-            {homepageCategories.map((category) => (
-              <CategoryCard key={category.title} {...category} />
-            ))}
-          </div>
+          <SectionHeader
+            eyebrow="Browse by section"
+            title="Click the creator, enter the section"
+            description="Each section uses a top model image as the doorway, with the label and count anchored over the bottom of the photo."
+            href="/models"
+            linkLabel="Browse Model Sections"
+          />
+          {modelSections.length ? (
+            <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+              {modelSections.map(({ section, model }) => (
+                <ModelSectionPhotoCard key={section.slug} section={section} model={model} />
+              ))}
+            </div>
+          ) : (
+            <div className="mt-6 grid grid-cols-2 gap-4 md:grid-cols-4 lg:grid-cols-8">
+              {homepageCategories.map((category) => (
+                <Link key={category.title} href={category.href} className="rounded-lg border border-white/10 bg-white/[0.04] p-4 text-sm font-black text-white">
+                  {category.title}
+                </Link>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 

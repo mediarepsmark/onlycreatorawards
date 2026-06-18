@@ -71,11 +71,20 @@ const cachePath =
   process.env.MODEL_DIRECTORY_CACHE_PATH || path.join(process.cwd(), "data", "traffichaus-models.json");
 const overridesPath =
   process.env.MODEL_DIRECTORY_OVERRIDES_PATH || path.join(process.cwd(), "data", "model-section-overrides.json");
+const jsonCache = new Map<string, { mtimeMs: number; size: number; value: unknown }>();
 
 function readJson<T>(filePath: string, fallback: T): T {
   try {
-    if (!fs.existsSync(filePath)) return fallback;
-    return JSON.parse(fs.readFileSync(filePath, "utf8")) as T;
+    const stat = fs.statSync(filePath);
+    const cached = jsonCache.get(filePath);
+
+    if (cached && cached.mtimeMs === stat.mtimeMs && cached.size === stat.size) {
+      return cached.value as T;
+    }
+
+    const value = JSON.parse(fs.readFileSync(filePath, "utf8")) as T;
+    jsonCache.set(filePath, { mtimeMs: stat.mtimeMs, size: stat.size, value });
+    return value;
   } catch {
     return fallback;
   }
