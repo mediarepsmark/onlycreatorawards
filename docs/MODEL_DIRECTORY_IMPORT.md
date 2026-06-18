@@ -28,7 +28,7 @@ node scripts/sync-traffichaus-models.mjs --input=/path/to/feed.json --pretty
 Run once per day on the host:
 
 ```cron
-17 3 * * * cd /home/httpd/html/onlycreatorawards.com/app && /usr/bin/docker run --rm -v "$PWD:/work" -w /work node:22-bookworm-slim node scripts/sync-traffichaus-models.mjs >> /home/codex_ssh/onlycreatorawards-model-import.log 2>&1
+17 3 * * * cd /home/httpd/html/onlycreatorawards.com/app && /usr/bin/docker run --rm --user "$(id -u):$(id -g)" -v "$PWD:/work" -w /work node:22-bookworm-slim node scripts/sync-traffichaus-models.mjs >> /home/codex_ssh/onlycreatorawards-model-import.log 2>&1
 ```
 
 This uses Docker's Node image and writes into the host checkout. The app container mounts `./data:/app/data:ro` and reads the cache at request time.
