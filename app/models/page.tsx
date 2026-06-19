@@ -20,27 +20,27 @@ import { buildMetadata, itemListSchema } from "@/lib/onlycreatorawards/seo";
 export const dynamic = "force-dynamic";
 
 export const metadata = buildMetadata({
-  title: "OnlyFans Model Directory | OnlyCreatorAwards",
+  title: "Latest Submitted Models | OnlyCreatorAwards",
   description:
-    "Browse the imported model directory in source-feed order, with creator profiles, category links, popularity signals, and OnlyFans outbound links.",
+    "Browse the latest submitted model profiles on OnlyCreatorAwards, with creator cards, category links, popularity signals, and OnlyFans outbound links.",
   path: "/models",
   index: true
 });
 
 const featureCards: Array<{ title: string; body: string; Icon: LucideIcon }> = [
   {
-    title: "Source order",
-    body: "The full directory follows the order received from the JSON feed.",
+    title: "Fresh submissions",
+    body: "Newly added model profiles appear quickly, with profile images, handles, and category signals ready for browsing.",
     Icon: Trophy
   },
   {
-    title: "Popularity fill",
-    body: "Category pages use views, clicks, source stats, and feed ranking after manual pins.",
+    title: "Rising discovery",
+    body: "Sections can highlight popular profiles using views, clicks, profile signals, and editorial pins.",
     Icon: Search
   },
   {
-    title: "Daily refresh",
-    body: "Cron updates the cache once per day so sections stay current.",
+    title: "Updated daily",
+    body: "The directory refreshes daily so new profile additions and category pages stay current.",
     Icon: RefreshCcw
   }
 ];
@@ -75,14 +75,14 @@ export default async function ModelsPage({ searchParams }: ModelsPageProps) {
     <SiteShell>
       <JsonLd
         data={itemListSchema(
-          "OnlyFans Model Directory",
+          "Latest Submitted Models",
           models.slice(0, 100).map((model) => ({ name: model.displayName, href: `/model/${model.slug}` }))
         )}
       />
       <PageHeader
-        eyebrow="Imported model directory"
-        title="OnlyFans model discovery feed"
-        description="The model directory preserves the source feed order, then powers category pages with manual top-three overrides and popularity-based fill."
+        eyebrow="Creator discovery"
+        title="Latest submitted models"
+        description="Browse newly added model profiles, explore popular sections, and jump into creator pages with categories, popularity signals, and direct profile links."
       >
         <Card className="border-white/10 bg-white/[0.06] text-white">
           <CardContent className="space-y-3">
@@ -95,10 +95,10 @@ export default async function ModelsPage({ searchParams }: ModelsPageProps) {
             </div>
             <div className="flex flex-wrap gap-2 text-xs font-black">
               <Badge className="border-brand-amber/40 bg-brand-amber/10 text-brand-amber">
-                Source order
+                Fresh profiles
               </Badge>
               <Badge className="border-brand-cyan/40 bg-brand-cyan/10 text-brand-cyan">
-                Daily sync
+                Updated daily
               </Badge>
               <Badge className="border-brand-rose/40 bg-brand-rose/10 text-brand-rose">
                 {stats.sectionCount} sections
@@ -141,11 +141,11 @@ export default async function ModelsPage({ searchParams }: ModelsPageProps) {
           <div>
             <div className="mb-5 flex flex-wrap items-end justify-between gap-4">
               <div>
-                <p className="text-sm font-black uppercase tracking-[0.18em] text-brand-amber">Source feed order</p>
-                <h2 className="mt-2 text-3xl font-black">Imported models</h2>
+                <p className="text-sm font-black uppercase tracking-[0.18em] text-brand-amber">New creator additions</p>
+                <h2 className="mt-2 text-3xl font-black">Latest submitted models</h2>
               </div>
               <p className="max-w-xl text-sm leading-6 text-white/55">
-                Category and blog pages can reorder by manual top-three pins and popularity. This directory keeps the imported feed sequence intact.
+                Browse the newest profiles added to the directory. Category pages can spotlight favorites with manual pins and popularity signals.
               </p>
             </div>
             {models.length ? (
