@@ -54,7 +54,7 @@ function modelSearchRank(model: ImportedModel, query: string) {
 function getModelMatches(query: string, limit = 24) {
   if (!query) return [];
 
-  return getImportedModels()
+  const matches = getImportedModels()
     .filter((model) => searchableModelText(model).includes(query))
     .sort(
       (first, second) =>
@@ -62,8 +62,18 @@ function getModelMatches(query: string, limit = 24) {
         second.clickCount - first.clickCount ||
         second.popularityScore - first.popularityScore ||
         first.sourceOrder - second.sourceOrder
-    )
-    .slice(0, limit);
+    );
+  const seenSlugs = new Set<string>();
+  const uniqueMatches: ImportedModel[] = [];
+
+  for (const model of matches) {
+    if (seenSlugs.has(model.slug)) continue;
+    seenSlugs.add(model.slug);
+    uniqueMatches.push(model);
+    if (uniqueMatches.length >= limit) break;
+  }
+
+  return uniqueMatches;
 }
 
 export default async function CreatorsPage({ searchParams }: CreatorsPageProps) {
