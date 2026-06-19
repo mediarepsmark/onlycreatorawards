@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Pin, TrendingUp } from "lucide-react";
 
+import { AudienceFilterBar } from "@/components/onlycreatorawards/AudienceFilterBar";
 import { ImportedModelCard } from "@/components/onlycreatorawards/ImportedModelCard";
 import { JsonLd } from "@/components/onlycreatorawards/JsonLd";
 import { ModelSectionPhotoCard } from "@/components/onlycreatorawards/HomeVisuals";
@@ -15,11 +16,17 @@ import {
   getModelDirectorySections,
   getModelsForSection
 } from "@/lib/onlycreatorawards/modelDirectory";
+import {
+  isDefaultModelAudienceSelection,
+  parseModelAudienceParam,
+  serializeModelAudienceSelection,
+  type ModelAudience
+} from "@/lib/onlycreatorawards/audience";
 import { buildMetadata, itemListSchema } from "@/lib/onlycreatorawards/seo";
 
 type ModelCategoryPageProps = {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ page?: string }>;
+  searchParams: Promise<{ audience?: string; page?: string }>;
 };
 
 export const dynamic = "force-dynamic";
@@ -43,17 +50,38 @@ export async function generateMetadata({ params }: ModelCategoryPageProps) {
   });
 }
 
+function categoryPageHref(slug: string, page: number, audience: ModelAudience[]) {
+  const params = new URLSearchParams();
+  if (page > 1) params.set("page", String(page));
+  if (!isDefaultModelAudienceSelection(audience)) {
+    params.set("audience", serializeModelAudienceSelection(audience));
+  }
+  const query = params.toString();
+  return query ? `/models/category/${slug}?${query}` : `/models/category/${slug}`;
+}
+
+function modelsDirectoryHref(audience: ModelAudience[]) {
+  if (isDefaultModelAudienceSelection(audience)) return "/models";
+  return `/models?audience=${serializeModelAudienceSelection(audience)}`;
+}
+
+function modelProfileHref(slug: string, audience: ModelAudience[]) {
+  if (isDefaultModelAudienceSelection(audience)) return `/model/${slug}`;
+  return `/model/${slug}?audience=${serializeModelAudienceSelection(audience)}`;
+}
+
 export default async function ModelCategoryPage({ params, searchParams }: ModelCategoryPageProps) {
   const { slug } = await params;
-  const { page: pageParam = "1" } = await searchParams;
+  const { audience: audienceParam, page: pageParam = "1" } = await searchParams;
+  const audience = parseModelAudienceParam(audienceParam);
   const pageSize = 96;
-  const section = getModelDirectorySectionBySlug(slug);
-  const models = getModelsForSection(slug);
+  const section = getModelDirectorySectionBySlug(slug, audience);
+  const models = getModelsForSection(slug, undefined, audience);
   const page = Math.max(1, Number.parseInt(pageParam, 10) || 1);
   const totalPages = Math.max(1, Math.ceil(models.length / pageSize));
   const currentPage = Math.min(page, totalPages);
   const pageModels = models.slice((currentPage - 1) * pageSize, currentPage * pageSize);
-  const topModel = getFeaturedModelForSection(slug);
+  const topModel = getFeaturedModelForSection(slug, audience);
 
   if (!section || (!models.length && slug !== "uncategorized")) notFound();
 
@@ -71,7 +99,7 @@ export default async function ModelCategoryPage({ params, searchParams }: ModelC
         description="Sections can pin up to three models manually. The remaining results fill by popularity signals, clicks, views, source stats, and feed order."
       >
         {topModel ? (
-          <ModelSectionPhotoCard section={section} model={topModel} href={`/model/${topModel.slug}`} />
+          <ModelSectionPhotoCard section={section} model={topModel} href={modelProfileHref(topModel.slug, audience)} />
         ) : (
           <Card className="border-white/10 bg-white/[0.06] text-white">
             <CardContent>
@@ -89,6 +117,10 @@ export default async function ModelCategoryPage({ params, searchParams }: ModelC
 
       <section className="bg-[#05070d] py-10 text-white">
         <div className="mx-auto max-w-7xl space-y-8 px-4 sm:px-6 lg:px-8">
+          <div className="rounded-lg border border-white/10 bg-white/[0.035] p-4">
+            <AudienceFilterBar />
+          </div>
+
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div className="flex flex-wrap gap-2">
               <Badge className="border-brand-amber/40 bg-brand-amber/10 text-brand-amber">
@@ -99,13 +131,13 @@ export default async function ModelCategoryPage({ params, searchParams }: ModelC
                 Popularity fill
               </Badge>
             </div>
-            <Link href="/models" className="text-sm font-black text-brand-amber hover:text-white">
+            <Link href={modelsDirectoryHref(audience)} className="text-sm font-black text-brand-amber hover:text-white">
               Back to all models
             </Link>
           </div>
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
             {pageModels.map((model, index) => (
-              <ImportedModelCard key={model.id} model={model} rank={(currentPage - 1) * pageSize + index + 1} />
+              <ImportedModelCard key={model.id} audience={audience} model={model} rank={(currentPage - 1) * pageSize + index + 1} />
             ))}
           </div>
           {models.length > pageSize ? (
@@ -116,7 +148,7 @@ export default async function ModelCategoryPage({ params, searchParams }: ModelC
               <div className="flex gap-2">
                 {currentPage > 1 ? (
                   <Link
-                    href={`/models/category/${slug}?page=${currentPage - 1}`}
+                    href={categoryPageHref(slug, currentPage - 1, audience)}
                     className="inline-flex min-h-10 items-center rounded-lg border border-white/10 px-4 text-sm font-black text-white transition hover:border-brand-amber/60 hover:text-brand-amber"
                   >
                     Previous
@@ -124,7 +156,7 @@ export default async function ModelCategoryPage({ params, searchParams }: ModelC
                 ) : null}
                 {currentPage < totalPages ? (
                   <Link
-                    href={`/models/category/${slug}?page=${currentPage + 1}`}
+                    href={categoryPageHref(slug, currentPage + 1, audience)}
                     className="inline-flex min-h-10 items-center rounded-lg bg-brand-amber px-4 text-sm font-black text-ink transition hover:bg-white"
                   >
                     Next

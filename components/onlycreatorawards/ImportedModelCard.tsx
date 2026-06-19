@@ -3,6 +3,11 @@ import { ArrowUpRight, BadgeCheck, MousePointerClick, Users } from "lucide-react
 
 import { ModelImage } from "@/components/onlycreatorawards/ModelImage";
 import { Badge } from "@/components/ui/badge";
+import {
+  isDefaultModelAudienceSelection,
+  serializeModelAudienceSelection,
+  type ModelAudience
+} from "@/lib/onlycreatorawards/audience";
 import { getImportedModelAudienceStat, type ImportedModel } from "@/lib/onlycreatorawards/modelDirectory";
 
 function compactNumber(value: number) {
@@ -16,17 +21,23 @@ function primaryCategory(model: ImportedModel) {
   return model.categoryLabels[0] ?? "Creator";
 }
 
-export function ImportedModelCard({ model, rank }: { model: ImportedModel; rank?: number }) {
+function modelHref(slug: string, audience?: ModelAudience[]) {
+  if (!audience || isDefaultModelAudienceSelection(audience)) return `/model/${slug}`;
+  return `/model/${slug}?audience=${serializeModelAudienceSelection(audience)}`;
+}
+
+export function ImportedModelCard({ audience, model, rank }: { audience?: ModelAudience[]; model: ImportedModel; rank?: number }) {
   const outboundUrl = model.onlyfansUrl || model.clickUrl;
-  const audience = getImportedModelAudienceStat(model);
-  const audienceText = audience.value ? `${compactNumber(audience.value)} ${audience.label.toLowerCase()}` : "Feed profile";
+  const audienceStat = getImportedModelAudienceStat(model);
+  const audienceText = audienceStat.value ? `${compactNumber(audienceStat.value)} ${audienceStat.label.toLowerCase()}` : "Feed profile";
+  const href = modelHref(model.slug, audience);
 
   return (
     <article
       className="group h-full overflow-hidden rounded-lg border border-white/10 !bg-[#080b12] text-white shadow-[0_24px_80px_rgba(0,0,0,0.22)] transition hover:-translate-y-1 hover:border-brand-amber/60"
       style={{ backgroundColor: "#080b12", color: "#fff" }}
     >
-      <Link href={`/model/${model.slug}`} className="block">
+      <Link href={href} className="block">
         <div className="relative aspect-[4/5] overflow-hidden bg-[#05070d]">
           <ModelImage
             src={model.profileImageUrl}
@@ -45,7 +56,7 @@ export function ImportedModelCard({ model, rank }: { model: ImportedModel; rank?
           <Badge className="mb-3 max-w-full truncate border-brand-cyan/40 bg-brand-cyan/10 text-brand-cyan">
             {primaryCategory(model)}
           </Badge>
-          <Link href={`/model/${model.slug}`} className="text-xl font-black text-white transition hover:text-brand-amber">
+          <Link href={href} className="text-xl font-black text-white transition hover:text-brand-amber">
             {model.displayName}
           </Link>
           {model.handle ? <p className="mt-1 text-sm font-bold text-white/70">{model.handle}</p> : null}
@@ -69,7 +80,7 @@ export function ImportedModelCard({ model, rank }: { model: ImportedModel; rank?
         </div>
         <div className="flex gap-2">
           <Link
-            href={`/model/${model.slug}`}
+            href={href}
             className="inline-flex min-h-10 flex-1 items-center justify-center rounded-lg border border-white/10 !bg-[#0e1420] px-3 text-sm font-black text-white transition hover:border-brand-amber/60 hover:text-brand-amber"
             style={{ backgroundColor: "#0e1420" }}
           >

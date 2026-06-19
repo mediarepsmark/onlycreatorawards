@@ -3,6 +3,7 @@ import Link from "next/link";
 import type { ComponentProps } from "react";
 import { ArrowUpRight, Crown, Sparkles, Trophy, Vote } from "lucide-react";
 
+import { AudienceFilterBar } from "@/components/onlycreatorawards/AudienceFilterBar";
 import {
   AwardCard,
   FeaturedModelPhotoCard,
@@ -27,8 +28,14 @@ import {
   getFeaturedModelForSection,
   getHomepageModelPlacements,
   getModelDirectorySections,
-  getModelDirectoryStats,
+  getModelDirectoryStats
 } from "@/lib/onlycreatorawards/modelDirectory";
+import {
+  isDefaultModelAudienceSelection,
+  parseModelAudienceParam,
+  serializeModelAudienceSelection,
+  type ModelAudience
+} from "@/lib/onlycreatorawards/audience";
 import { getAwardYears, getAwards, getCreators, siteConfig } from "@/lib/onlycreatorawards/repository";
 import { buildMetadata, organizationSchema, websiteSchema } from "@/lib/onlycreatorawards/seo";
 
@@ -41,18 +48,34 @@ export const metadata = buildMetadata({
   path: "/"
 });
 
-export default function HomePage() {
+type HomePageProps = {
+  searchParams: Promise<{ audience?: string }>;
+};
+
+function modelSectionHref(slug: string, audience: ModelAudience[]) {
+  if (isDefaultModelAudienceSelection(audience)) return `/models/category/${slug}`;
+  return `/models/category/${slug}?audience=${serializeModelAudienceSelection(audience)}`;
+}
+
+function modelsHref(audience: ModelAudience[]) {
+  if (isDefaultModelAudienceSelection(audience)) return "/models";
+  return `/models?audience=${serializeModelAudienceSelection(audience)}`;
+}
+
+export default async function HomePage({ searchParams }: HomePageProps) {
+  const { audience: audienceParam } = await searchParams;
+  const audience = parseModelAudienceParam(audienceParam);
   const modelStats = getModelDirectoryStats();
-  const homepageModels = getHomepageModelPlacements();
+  const homepageModels = getHomepageModelPlacements(audience);
   const featuredModels = homepageModels.featured;
   const heroModels = homepageModels.hero;
   const modelLeaderboard = homepageModels.leaderboard;
-  const modelSections = getModelDirectorySections()
+  const modelSections = getModelDirectorySections(audience)
     .filter((section) => section.count >= 5)
     .slice(0, 8)
     .map((section) => ({
-      section,
-      model: getFeaturedModelForSection(section.slug)
+      section: { ...section, href: modelSectionHref(section.slug, audience) },
+      model: getFeaturedModelForSection(section.slug, audience)
     }));
   const creators = getCreators()
     .filter((creator) => creator.status === "PUBLISHED")
@@ -113,7 +136,7 @@ export default function HomePage() {
                 Vote Now
               </Link>
               <Link
-                href="/models"
+                href={modelsHref(audience)}
                 className="inline-flex min-h-12 items-center gap-2 rounded-lg border border-brand-amber/50 bg-black/[0.26] px-5 font-black text-white transition hover:bg-brand-amber/10 hover:text-brand-amber"
               >
                 <ArrowUpRight className="h-5 w-5" aria-hidden="true" />
@@ -121,7 +144,7 @@ export default function HomePage() {
               </Link>
             </div>
             <div className="mt-8 max-w-[520px]">
-              <SearchPanel compact />
+              <SearchPanel audience={audience} compact />
             </div>
             <div className="mt-6 grid max-w-3xl gap-2 sm:grid-cols-2">
               {heroTrustItems.map(({ icon: Icon, label }) => (
@@ -133,7 +156,7 @@ export default function HomePage() {
             </div>
           </div>
           <div className="order-1 pb-4 pt-2 lg:order-2 lg:pb-10 lg:pt-0">
-            {heroModels.length ? <ModelHeroStack models={heroModels} /> : null}
+            {heroModels.length ? <ModelHeroStack audience={audience} models={heroModels} /> : null}
           </div>
         </div>
       </section>
@@ -146,19 +169,25 @@ export default function HomePage() {
         </div>
       </section>
 
+      <section className="bg-midnight px-4 pt-8 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl rounded-lg border border-white/10 bg-white/[0.035] p-4">
+          <AudienceFilterBar />
+        </div>
+      </section>
+
       <section className="bg-midnight py-12">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <SectionHeader
             eyebrow="Live model profiles"
             title="Featured from the feed"
             description="Imported profiles now sit front and center, with images, categories, popularity signals, and direct profile pages."
-            href="/models"
+            href={modelsHref(audience)}
             linkLabel="Explore All Models"
           />
           {featuredModels.length ? (
             <div className="mt-6 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
               {featuredModels.slice(0, 8).map((model, index) => (
-                <FeaturedModelPhotoCard key={model.id} model={model} rank={index + 1} />
+                <FeaturedModelPhotoCard key={model.id} audience={audience} model={model} rank={index + 1} />
               ))}
             </div>
           ) : (
@@ -193,13 +222,13 @@ export default function HomePage() {
             eyebrow="Trending models"
             title="Profiles getting attention"
             description="A live spotlight powered by the imported feed, source popularity, clicks, views, and category relevance."
-            href="/models"
+            href={modelsHref(audience)}
             linkLabel="Explore All Models"
           />
           {featuredModels.length ? (
             <div className="mt-6 grid gap-4 lg:grid-cols-5">
               {modelLeaderboard.map((model, index) => (
-                <ModelLeaderboardCard key={model.id} model={model} rank={index + 1} />
+                <ModelLeaderboardCard key={model.id} audience={audience} model={model} rank={index + 1} />
               ))}
             </div>
           ) : (
@@ -235,7 +264,7 @@ export default function HomePage() {
             eyebrow="Browse by section"
             title="Popular sections"
             description="Click a large model photo to enter each section, with the label and count kept in a clean panel below."
-            href="/models"
+            href={modelsHref(audience)}
             linkLabel="Browse Model Sections"
           />
           {modelSections.length ? (

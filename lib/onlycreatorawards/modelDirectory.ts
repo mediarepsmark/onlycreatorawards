@@ -3,6 +3,12 @@ import "server-only";
 import fs from "node:fs";
 import path from "node:path";
 
+import {
+  defaultModelAudienceSelection,
+  modelAudienceValues,
+  type ModelAudience
+} from "@/lib/onlycreatorawards/audience";
+
 export type ImportedModel = {
   id: string;
   source: string;
@@ -180,6 +186,46 @@ function normalizedCategoryLabels(model: ImportedModel, categorySlugs: string[])
   return categorySlugs.map((slug, index) => normalizeCategoryText(model.categoryLabels[index]) ?? titleizeSlug(slug));
 }
 
+function modelAudienceHaystack(model: ImportedModel) {
+  return [
+    model.gender,
+    model.rawCategory,
+    model.rawDetails,
+    model.displayName,
+    model.sourceName,
+    model.username,
+    ...model.sourceKeywords,
+    ...model.categorySlugs,
+    ...model.categoryLabels
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+}
+
+export function getImportedModelAudience(model: ImportedModel): ModelAudience {
+  const haystack = modelAudienceHaystack(model);
+
+  if (/(^|[^a-z])(trans|transgender|transsexual|shemale|ladyboy|mtf|ftm|ts)([^a-z]|$)/i.test(haystack)) {
+    return "trans";
+  }
+
+  if (/(^|[^a-z])(male|man|men|guy|guys|boy|boys|twink|daddy|hunk|gay|bear|jock)([^a-z]|$)/i.test(haystack)) {
+    return "men";
+  }
+
+  return "women";
+}
+
+export function filterModelsByAudience(models: ImportedModel[], audience?: ModelAudience[]) {
+  if (!audience) return models;
+
+  const selected = audience.length ? audience : defaultModelAudienceSelection;
+  if (modelAudienceValues.every((value) => selected.includes(value))) return models;
+
+  return models.filter((model) => selected.includes(getImportedModelAudience(model)));
+}
+
 function normalizeImportedModel(model: ImportedModel): ImportedModel {
   const categorySlugs = model.categorySlugs.length ? model.categorySlugs : ["uncategorized"];
   const control = getModelPromotionControl(model.slug);
@@ -261,19 +307,20 @@ export function getImportedModelOrganicScore(model: ImportedModel) {
   );
 }
 
-export function getImportedModelEffectiveScore(model: ImportedModel) {
+export function getImportedModelEffectiveScore(model: ImportedModel, audience?: ModelAudience[]) {
   const control = getModelPromotionControl(model.slug);
   const adjustment = Number.isFinite(control.scoreAdjustment) ? Number(control.scoreAdjustment) : 0;
   const suppressPenalty = control.suppressed ? 100_000 : 0;
   const brokenImagePenalty = control.brokenImage || model.imageStatus === "MISSING_IMAGE" ? 2_500 : 0;
+  const womenPriorityBoost = audience && !audience.includes("men") && getImportedModelAudience(model) === "women" ? 4_000 : 0;
 
-  return Number((getImportedModelOrganicScore(model) + adjustment - suppressPenalty - brokenImagePenalty).toFixed(2));
+  return Number((getImportedModelOrganicScore(model) + adjustment + womenPriorityBoost - suppressPenalty - brokenImagePenalty).toFixed(2));
 }
 
-function popularityOrdered(models: ImportedModel[]) {
+function popularityOrdered(models: ImportedModel[], audience?: ModelAudience[]) {
   return [...models].sort(
     (first, second) =>
-      getImportedModelEffectiveScore(second) - getImportedModelEffectiveScore(first) ||
+      getImportedModelEffectiveScore(second, audience) - getImportedModelEffectiveScore(first, audience) ||
       second.sourceFanCount - first.sourceFanCount ||
       second.clickCount - first.clickCount ||
       first.sourceOrder - second.sourceOrder
@@ -313,17 +360,17 @@ export function getModelPromotionControl(slug: string): ModelPromotionControl {
   return getPromotionOverrides().models?.[slug] ?? {};
 }
 
-function applyOverrides(sectionSlug: string, models: ImportedModel[]) {
+function applyOverrides(sectionSlug: string, models: ImportedModel[], audience?: ModelAudience[]) {
   const overrides = getOverrides().sections ?? {};
   const slugs = [...(overrides[sectionSlug] ?? []), ...(sectionSlug !== "all" ? overrides.all ?? [] : [])]
     .filter(Boolean)
     .slice(0, 3);
-  if (!slugs.length) return popularityOrdered(models);
+  if (!slugs.length) return popularityOrdered(models, audience);
 
   const bySlug = new Map(models.map((model) => [model.slug, model]));
   const pinned = slugs.map((slug) => bySlug.get(slug)).filter((model): model is ImportedModel => Boolean(model));
   const pinnedSlugs = new Set(pinned.map((model) => model.slug));
-  const rest = popularityOrdered(models.filter((model) => !pinnedSlugs.has(model.slug)));
+  const rest = popularityOrdered(models.filter((model) => !pinnedSlugs.has(model.slug)), audience);
 
   return [...pinned, ...rest];
 }
@@ -346,7 +393,25 @@ export function getImportedModelBySlug(slug: string) {
   return getImportedModels().find((model) => model.slug === slug);
 }
 
-export function getModelDirectorySections() {
+export function getModelDirectorySections(audience?: ModelAudience[]) {
+  if (audience) {
+    const sectionMap = new Map<string, ModelDirectorySection>();
+
+    filterModelsByAudience(getImportedModels(), audience).forEach((model) => {
+      model.categorySlugs.forEach((slug) => {
+        const existing = sectionMap.get(slug);
+        sectionMap.set(slug, {
+          slug,
+          label: titleizeSlug(slug),
+          count: (existing?.count ?? 0) + 1,
+          href: `/models/category/${slug}`
+        });
+      });
+    });
+
+    return [...sectionMap.values()].sort((first, second) => second.count - first.count || first.label.localeCompare(second.label));
+  }
+
   const cache = getModelDirectoryCache();
   const cachedSections = cache.sections?.length ? cache.sections.map(normalizedSection) : [];
   const sectionMap = new Map(cachedSections.map((section) => [section.slug, section]));
@@ -366,34 +431,37 @@ export function getModelDirectorySections() {
   return [...sectionMap.values()].sort((first, second) => second.count - first.count || first.label.localeCompare(second.label));
 }
 
-export function getModelDirectorySectionBySlug(slug: string) {
+export function getModelDirectorySectionBySlug(slug: string, audience?: ModelAudience[]) {
   if (slug === "all") {
     return {
       slug: "all",
       label: "All Models",
-      count: getImportedModels().length,
+      count: audience ? filterModelsByAudience(getImportedModels(), audience).length : getImportedModels().length,
       href: "/models"
     };
   }
 
   return (
-    getModelDirectorySections().find((section) => section.slug === slug) ?? {
+    getModelDirectorySections(audience).find((section) => section.slug === slug) ?? {
       slug,
       label: titleizeSlug(slug),
-      count: getModelsForSection(slug).length,
+      count: getModelsForSection(slug, undefined, audience).length,
       href: `/models/category/${slug}`
     }
   );
 }
 
-export function getModelsForSection(slug: string, limit?: number) {
-  const models = getImportedModels().filter((model) => matchesSection(model, slug));
-  const ordered = applyOverrides(slug, models);
+export function getModelsForSection(slug: string, limit?: number, audience?: ModelAudience[]) {
+  const models = filterModelsByAudience(
+    getImportedModels().filter((model) => matchesSection(model, slug)),
+    audience
+  );
+  const ordered = applyOverrides(slug, models, audience);
   return typeof limit === "number" ? ordered.slice(0, limit) : ordered;
 }
 
-export function getTopImportedModels(limit = 12) {
-  return popularityOrdered(getImportedModels()).slice(0, limit);
+export function getTopImportedModels(limit = 12, audience?: ModelAudience[]) {
+  return popularityOrdered(filterModelsByAudience(getImportedModels(), audience), audience).slice(0, limit);
 }
 
 function homepageEligible(model: ImportedModel) {
@@ -401,31 +469,31 @@ function homepageEligible(model: ImportedModel) {
   return Boolean(model.profileImageUrl) && !control.homepageBlocked && !control.brokenImage;
 }
 
-function pickHomepageModels(slugs: string[], count: number, used: Set<string>, models: ImportedModel[]) {
+function pickHomepageModels(slugs: string[], count: number, used: Set<string>, models: ImportedModel[], audience = defaultModelAudienceSelection) {
   const bySlug = new Map(models.map((model) => [model.slug, model]));
   const pinned = slugs
     .map((slug) => bySlug.get(slug))
     .filter((model): model is ImportedModel => Boolean(model && homepageEligible(model) && !used.has(model.slug)));
   const pinnedSlugs = new Set(pinned.map((model) => model.slug));
-  const fill = popularityOrdered(models).filter((model) => homepageEligible(model) && !used.has(model.slug) && !pinnedSlugs.has(model.slug));
+  const fill = popularityOrdered(models, audience).filter((model) => homepageEligible(model) && !used.has(model.slug) && !pinnedSlugs.has(model.slug));
   const picked = [...pinned, ...fill].slice(0, count);
   picked.forEach((model) => used.add(model.slug));
   return picked;
 }
 
-export function getHomepageModelPlacements() {
-  const models = getImportedModels();
+export function getHomepageModelPlacements(audience = defaultModelAudienceSelection) {
+  const models = filterModelsByAudience(getImportedModels(), audience);
   const homepage = getPromotionOverrides().homepage ?? {};
   const used = new Set<string>();
-  const hero = pickHomepageModels(homepage.hero ?? [], 3, used, models);
-  const featured = pickHomepageModels(homepage.featured ?? [], 8, used, models);
-  const leaderboard = pickHomepageModels(homepage.leaderboard ?? [], 5, used, models);
+  const hero = pickHomepageModels(homepage.hero ?? [], 3, used, models, audience);
+  const featured = pickHomepageModels(homepage.featured ?? [], 8, used, models, audience);
+  const leaderboard = pickHomepageModels(homepage.leaderboard ?? [], 5, used, models, audience);
 
   return { hero, featured, leaderboard };
 }
 
-export function getFeaturedModelForSection(slug: string) {
-  const models = getModelsForSection(slug);
+export function getFeaturedModelForSection(slug: string, audience?: ModelAudience[]) {
+  const models = getModelsForSection(slug, undefined, audience);
   return models.find(homepageEligible) ?? models[0];
 }
 

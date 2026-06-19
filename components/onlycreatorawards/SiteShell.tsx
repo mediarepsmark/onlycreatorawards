@@ -1,5 +1,5 @@
 import Link from "next/link";
-import type { ReactNode } from "react";
+import { Suspense, type ReactNode } from "react";
 import {
   ChevronRight,
   Instagram,
@@ -14,6 +14,7 @@ import {
   Youtube
 } from "lucide-react";
 
+import { AudienceFilterBar } from "@/components/onlycreatorawards/AudienceFilterBar";
 import { siteConfig } from "@/lib/onlycreatorawards/repository";
 
 const primaryNav = [
@@ -117,6 +118,13 @@ export function SiteShell({ children }: { children: ReactNode }) {
             ))}
           </div>
         </nav>
+        <div className="border-t border-white/10 px-4 py-2">
+          <div className="mx-auto max-w-7xl">
+            <Suspense fallback={null}>
+              <AudienceFilterBar compact />
+            </Suspense>
+          </div>
+        </div>
       </header>
       <main>{children}</main>
       <footer className="relative border-t border-white/10 bg-[#04050a] text-white">

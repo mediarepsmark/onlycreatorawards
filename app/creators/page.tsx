@@ -1,10 +1,12 @@
+import { AudienceFilterBar } from "@/components/onlycreatorawards/AudienceFilterBar";
 import { PageHeader } from "@/components/onlycreatorawards/PageHeader";
 import { CreatorCard } from "@/components/onlycreatorawards/CreatorCard";
 import { ImportedModelCard } from "@/components/onlycreatorawards/ImportedModelCard";
 import { JsonLd } from "@/components/onlycreatorawards/JsonLd";
 import { SearchPanel } from "@/components/onlycreatorawards/SearchPanel";
 import { SiteShell } from "@/components/onlycreatorawards/SiteShell";
-import { getImportedModels, type ImportedModel } from "@/lib/onlycreatorawards/modelDirectory";
+import { filterModelsByAudience, getImportedModels, type ImportedModel } from "@/lib/onlycreatorawards/modelDirectory";
+import { parseModelAudienceParam, type ModelAudience } from "@/lib/onlycreatorawards/audience";
 import { getCreators } from "@/lib/onlycreatorawards/repository";
 import { buildMetadata, itemListSchema } from "@/lib/onlycreatorawards/seo";
 
@@ -17,7 +19,7 @@ export const metadata = buildMetadata({
 });
 
 type CreatorsPageProps = {
-  searchParams: Promise<{ query?: string }>;
+  searchParams: Promise<{ audience?: string; query?: string }>;
 };
 
 function searchableModelText(model: ImportedModel) {
@@ -51,10 +53,10 @@ function modelSearchRank(model: ImportedModel, query: string) {
   return 2;
 }
 
-function getModelMatches(query: string, limit = 24) {
+function getModelMatches(query: string, audience: ModelAudience[], limit = 24) {
   if (!query) return [];
 
-  const matches = getImportedModels()
+  const matches = filterModelsByAudience(getImportedModels(), audience)
     .filter((model) => searchableModelText(model).includes(query))
     .sort(
       (first, second) =>
@@ -77,10 +79,11 @@ function getModelMatches(query: string, limit = 24) {
 }
 
 export default async function CreatorsPage({ searchParams }: CreatorsPageProps) {
-  const { query = "" } = await searchParams;
+  const { audience: audienceParam, query = "" } = await searchParams;
+  const audience = parseModelAudienceParam(audienceParam);
   const trimmedQuery = query.trim();
   const normalizedQuery = trimmedQuery.toLowerCase();
-  const modelMatches = getModelMatches(normalizedQuery);
+  const modelMatches = getModelMatches(normalizedQuery, audience);
   const creators = getCreators()
     .filter((creator) => creator.status !== "REMOVED")
     .filter((creator) => {
@@ -123,10 +126,14 @@ export default async function CreatorsPage({ searchParams }: CreatorsPageProps) 
         title={normalizedQuery ? `Search results for "${trimmedQuery}"` : "Search public creator profiles"}
         description="Browse creator and model profiles with categories, verified links, awards, votes, comments, profile claims, and CreatorStars scores."
       >
-        <SearchPanel compact defaultQuery={trimmedQuery} />
+        <SearchPanel audience={audience} compact defaultQuery={trimmedQuery} />
       </PageHeader>
       <section className="bg-[#05070d] py-10 text-white">
         <div className="mx-auto max-w-7xl space-y-10 px-4 sm:px-6 lg:px-8">
+          <div className="rounded-lg border border-white/10 bg-white/[0.035] p-4">
+            <AudienceFilterBar />
+          </div>
+
           {normalizedQuery ? (
             <>
               <div>
@@ -139,7 +146,7 @@ export default async function CreatorsPage({ searchParams }: CreatorsPageProps) 
                 {modelMatches.length ? (
                   <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
                     {modelMatches.map((model, index) => (
-                      <ImportedModelCard key={model.id} model={model} rank={index + 1} />
+                      <ImportedModelCard key={model.id} audience={audience} model={model} rank={index + 1} />
                     ))}
                   </div>
                 ) : (

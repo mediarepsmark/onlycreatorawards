@@ -32,6 +32,11 @@ import { ModelImage } from "@/components/onlycreatorawards/ModelImage";
 import { ModelPortraitStage } from "@/components/onlycreatorawards/ModelPortraitStage";
 import { Badge } from "@/components/ui/badge";
 import {
+  isDefaultModelAudienceSelection,
+  serializeModelAudienceSelection,
+  type ModelAudience
+} from "@/lib/onlycreatorawards/audience";
+import {
   getImportedModelAudienceStat,
   getModelPromotionControl,
   type ImportedModel,
@@ -109,6 +114,11 @@ function audienceDisplay(model: ImportedModel) {
     value: audience.value ? compactNumber(audience.value) : "Live",
     label: audience.label
   };
+}
+
+function modelProfileHref(slug: string, audience?: ModelAudience[]) {
+  if (!audience || isDefaultModelAudienceSelection(audience)) return `/model/${slug}`;
+  return `/model/${slug}?audience=${serializeModelAudienceSelection(audience)}`;
 }
 
 export function SectionHeader({
@@ -218,13 +228,14 @@ export function SpotlightCreatorCard({ creator, rank }: { creator: CreatorProfil
   );
 }
 
-export function FeaturedModelPhotoCard({ model, rank }: { model: ImportedModel; rank: number }) {
+export function FeaturedModelPhotoCard({ audience, model, rank }: { audience?: ModelAudience[]; model: ImportedModel; rank: number }) {
   const outboundUrl = model.onlyfansUrl || model.clickUrl;
-  const audience = audienceDisplay(model);
+  const audienceStat = audienceDisplay(model);
   const promotion = getModelPromotionControl(model.slug);
+  const href = modelProfileHref(model.slug, audience);
 
   return (
-    <Link href={`/model/${model.slug}`} className="group block h-full">
+    <Link href={href} className="group block h-full">
       <article className="relative min-h-[340px] overflow-hidden rounded-lg border border-white/[0.12] bg-black transition hover:-translate-y-1 hover:border-brand-amber/60 hover:shadow-gold-glow">
         <ModelPortraitStage
           src={model.profileImageUrl}
@@ -248,8 +259,8 @@ export function FeaturedModelPhotoCard({ model, rank }: { model: ImportedModel; 
                 <p className="mt-1 truncate text-sm font-bold text-white/60">{model.handle ?? "Imported profile"}</p>
               </div>
               <div className="shrink-0 text-right">
-                <p className="text-xl font-black text-brand-amber">{audience.value}</p>
-                <p className="text-xs font-black uppercase tracking-normal text-white/45">{audience.label}</p>
+                <p className="text-xl font-black text-brand-amber">{audienceStat.value}</p>
+                <p className="text-xs font-black uppercase tracking-normal text-white/45">{audienceStat.label}</p>
               </div>
             </div>
             <div className="mt-4 flex flex-wrap gap-2">
@@ -272,11 +283,12 @@ export function FeaturedModelPhotoCard({ model, rank }: { model: ImportedModel; 
   );
 }
 
-export function ModelLeaderboardCard({ model, rank }: { model: ImportedModel; rank: number }) {
+export function ModelLeaderboardCard({ audience, model, rank }: { audience?: ModelAudience[]; model: ImportedModel; rank: number }) {
   const isWinnerSlot = rank <= 3;
+  const href = modelProfileHref(model.slug, audience);
 
   return (
-    <Link href={`/model/${model.slug}`} className="group block">
+    <Link href={href} className="group block">
       <article
         className={`grid min-h-24 grid-cols-[42px_56px_1fr_auto] items-center gap-3 rounded-lg border bg-white/[0.045] p-3 transition hover:-translate-y-0.5 ${
           isWinnerSlot ? "border-brand-amber/[0.55] shadow-gold-glow" : "border-white/[0.14] hover:border-brand-cyan/[0.55]"
@@ -304,7 +316,7 @@ export function ModelLeaderboardCard({ model, rank }: { model: ImportedModel; ra
   );
 }
 
-export function ModelHeroStack({ models }: { models: ImportedModel[] }) {
+export function ModelHeroStack({ audience, models }: { audience?: ModelAudience[]; models: ImportedModel[] }) {
   const [primary, second, third] = models;
 
   if (!primary) {
@@ -318,7 +330,7 @@ export function ModelHeroStack({ models }: { models: ImportedModel[] }) {
     <div className="relative mx-auto max-w-[500px] lg:ml-auto lg:mr-0">
       <div className="absolute -left-8 top-10 h-36 w-36 rounded-full bg-brand-purple/25 blur-3xl" />
       <div className="absolute -right-8 bottom-10 h-36 w-36 rounded-full bg-brand-cyan/20 blur-3xl" />
-      <Link href={`/model/${primary.slug}`} className="group relative block overflow-hidden rounded-lg border border-brand-amber/40 bg-black shadow-gold-glow">
+      <Link href={modelProfileHref(primary.slug, audience)} className="group relative block overflow-hidden rounded-lg border border-brand-amber/40 bg-black shadow-gold-glow">
         <div className="relative aspect-[0.88]">
           <ModelPortraitStage
             src={primary.profileImageUrl}
@@ -358,7 +370,7 @@ export function ModelHeroStack({ models }: { models: ImportedModel[] }) {
         {[second, third].filter(Boolean).map((model) => (
           <Link
             key={model.slug}
-            href={`/model/${model.slug}`}
+            href={modelProfileHref(model.slug, audience)}
             className="group min-w-0 overflow-hidden rounded-lg border border-white/10 bg-black/70 p-2 backdrop-blur transition hover:border-brand-cyan/60"
           >
             <div className="flex items-center gap-3">

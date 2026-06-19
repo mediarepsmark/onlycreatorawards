@@ -2,6 +2,7 @@ import Link from "next/link";
 import { DatabaseZap, RefreshCcw, Search, Trophy } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
+import { AudienceFilterBar } from "@/components/onlycreatorawards/AudienceFilterBar";
 import { ImportedModelCard } from "@/components/onlycreatorawards/ImportedModelCard";
 import { JsonLd } from "@/components/onlycreatorawards/JsonLd";
 import { ModelSectionPhotoCard } from "@/components/onlycreatorawards/HomeVisuals";
@@ -10,11 +11,18 @@ import { SiteShell } from "@/components/onlycreatorawards/SiteShell";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import {
+  filterModelsByAudience,
   getFeaturedModelForSection,
   getImportedModels,
   getModelDirectorySections,
   getModelDirectoryStats
 } from "@/lib/onlycreatorawards/modelDirectory";
+import {
+  isDefaultModelAudienceSelection,
+  parseModelAudienceParam,
+  serializeModelAudienceSelection,
+  type ModelAudience
+} from "@/lib/onlycreatorawards/audience";
 import { buildMetadata, itemListSchema } from "@/lib/onlycreatorawards/seo";
 
 export const dynamic = "force-dynamic";
@@ -46,7 +54,7 @@ const featureCards: Array<{ title: string; body: string; Icon: LucideIcon }> = [
 ];
 
 type ModelsPageProps = {
-  searchParams: Promise<{ page?: string }>;
+  searchParams: Promise<{ audience?: string; page?: string }>;
 };
 
 function formatDate(value: string) {
@@ -54,21 +62,37 @@ function formatDate(value: string) {
   return new Intl.DateTimeFormat("en", { month: "short", day: "numeric", year: "numeric" }).format(new Date(value));
 }
 
+function modelsPageHref(page: number, audience: ModelAudience[]) {
+  const params = new URLSearchParams();
+  if (page > 1) params.set("page", String(page));
+  if (!isDefaultModelAudienceSelection(audience)) {
+    params.set("audience", serializeModelAudienceSelection(audience));
+  }
+  const query = params.toString();
+  return query ? `/models?${query}` : "/models";
+}
+
+function modelSectionHref(slug: string, audience: ModelAudience[]) {
+  if (isDefaultModelAudienceSelection(audience)) return `/models/category/${slug}`;
+  return `/models/category/${slug}?audience=${serializeModelAudienceSelection(audience)}`;
+}
+
 export default async function ModelsPage({ searchParams }: ModelsPageProps) {
-  const { page: pageParam = "1" } = await searchParams;
+  const { audience: audienceParam, page: pageParam = "1" } = await searchParams;
+  const audience = parseModelAudienceParam(audienceParam);
   const pageSize = 96;
-  const models = getImportedModels();
+  const models = filterModelsByAudience(getImportedModels(), audience);
   const page = Math.max(1, Number.parseInt(pageParam, 10) || 1);
   const totalPages = Math.max(1, Math.ceil(models.length / pageSize));
   const currentPage = Math.min(page, totalPages);
   const pageModels = models.slice((currentPage - 1) * pageSize, currentPage * pageSize);
   const stats = getModelDirectoryStats();
-  const sections = getModelDirectorySections()
+  const sections = getModelDirectorySections(audience)
     .filter((section) => section.count >= 5)
     .slice(0, 12)
     .map((section) => ({
-      section,
-      model: getFeaturedModelForSection(section.slug)
+      section: { ...section, href: modelSectionHref(section.slug, audience) },
+      model: getFeaturedModelForSection(section.slug, audience)
     }));
 
   return (
@@ -110,6 +134,10 @@ export default async function ModelsPage({ searchParams }: ModelsPageProps) {
 
       <section className="bg-[#05070d] py-10 text-white">
         <div className="mx-auto max-w-7xl space-y-8 px-4 sm:px-6 lg:px-8">
+          <div className="rounded-lg border border-white/10 bg-white/[0.035] p-4">
+            <AudienceFilterBar />
+          </div>
+
           <div className="grid gap-4 md:grid-cols-3">
             {featureCards.map(({ title, body, Icon }) => (
               <Card key={title} className="border-white/10 bg-white/[0.045] text-white">
@@ -151,7 +179,7 @@ export default async function ModelsPage({ searchParams }: ModelsPageProps) {
             {models.length ? (
               <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
                 {pageModels.map((model, index) => (
-                  <ImportedModelCard key={model.id} model={model} rank={(currentPage - 1) * pageSize + index + 1} />
+                  <ImportedModelCard key={model.id} audience={audience} model={model} rank={(currentPage - 1) * pageSize + index + 1} />
                 ))}
               </div>
             ) : (
@@ -172,7 +200,7 @@ export default async function ModelsPage({ searchParams }: ModelsPageProps) {
                 <div className="flex gap-2">
                   {currentPage > 1 ? (
                     <Link
-                      href={`/models?page=${currentPage - 1}`}
+                      href={modelsPageHref(currentPage - 1, audience)}
                       className="inline-flex min-h-10 items-center rounded-lg border border-white/10 px-4 text-sm font-black text-white transition hover:border-brand-amber/60 hover:text-brand-amber"
                     >
                       Previous
@@ -180,7 +208,7 @@ export default async function ModelsPage({ searchParams }: ModelsPageProps) {
                   ) : null}
                   {currentPage < totalPages ? (
                     <Link
-                      href={`/models?page=${currentPage + 1}`}
+                      href={modelsPageHref(currentPage + 1, audience)}
                       className="inline-flex min-h-10 items-center rounded-lg bg-brand-amber px-4 text-sm font-black text-ink transition hover:bg-white"
                     >
                       Next

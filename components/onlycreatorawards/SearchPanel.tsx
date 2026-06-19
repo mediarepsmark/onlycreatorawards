@@ -1,8 +1,25 @@
 import { Search } from "lucide-react";
 
-export function SearchPanel({ compact = false, defaultQuery = "" }: { compact?: boolean; defaultQuery?: string }) {
+import {
+  isDefaultModelAudienceSelection,
+  serializeModelAudienceSelection,
+  type ModelAudience
+} from "@/lib/onlycreatorawards/audience";
+
+export function SearchPanel({
+  audience,
+  compact = false,
+  defaultQuery = ""
+}: {
+  audience?: ModelAudience[];
+  compact?: boolean;
+  defaultQuery?: string;
+}) {
+  const audienceParam = audience && !isDefaultModelAudienceSelection(audience) ? serializeModelAudienceSelection(audience) : "";
+
   return (
     <form action="/creators" className={compact ? "w-full" : "mx-auto w-full max-w-3xl"}>
+      {audienceParam ? <input type="hidden" name="audience" value={audienceParam} /> : null}
       <div className="flex min-h-14 items-center gap-3 rounded-lg border border-brand-cyan/[0.45] bg-black/[0.46] p-2 shadow-cyan-glow backdrop-blur-xl transition focus-within:border-brand-amber/80">
         <Search className="ml-2 h-5 w-5 shrink-0 text-brand-cyan" aria-hidden="true" />
         <input

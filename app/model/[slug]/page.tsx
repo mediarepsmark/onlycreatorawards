@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { ArrowUpRight, BadgeCheck, CalendarClock, MapPin, MousePointerClick, Users } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
+import { AudienceFilterBar } from "@/components/onlycreatorawards/AudienceFilterBar";
 import { ImportedModelCard } from "@/components/onlycreatorawards/ImportedModelCard";
 import { JsonLd } from "@/components/onlycreatorawards/JsonLd";
 import { ModelImage } from "@/components/onlycreatorawards/ModelImage";
@@ -16,10 +17,17 @@ import {
   getImportedModels,
   getModelsForSection
 } from "@/lib/onlycreatorawards/modelDirectory";
+import {
+  isDefaultModelAudienceSelection,
+  parseModelAudienceParam,
+  serializeModelAudienceSelection,
+  type ModelAudience
+} from "@/lib/onlycreatorawards/audience";
 import { breadcrumbSchema, buildMetadata } from "@/lib/onlycreatorawards/seo";
 
 type ModelPageProps = {
   params: Promise<{ slug: string }>;
+  searchParams?: Promise<{ audience?: string }>;
 };
 
 const modelPanelStyle = { backgroundColor: "#080b12", color: "#fff" };
@@ -51,18 +59,25 @@ function locationFor(model: NonNullable<ReturnType<typeof getImportedModelBySlug
   return [model.city, model.region, model.country].filter(Boolean).join(", ");
 }
 
-export default async function ModelProfilePage({ params }: ModelPageProps) {
+function categoryHref(slug: string, audience: ModelAudience[]) {
+  if (isDefaultModelAudienceSelection(audience)) return `/models/category/${slug}`;
+  return `/models/category/${slug}?audience=${serializeModelAudienceSelection(audience)}`;
+}
+
+export default async function ModelProfilePage({ params, searchParams }: ModelPageProps) {
   const { slug } = await params;
+  const { audience: audienceParam } = (await searchParams) ?? {};
+  const audienceSelection = parseModelAudienceParam(audienceParam);
   const model = getImportedModelBySlug(slug);
   if (!model) notFound();
 
   const outboundUrl = model.onlyfansUrl || model.clickUrl;
   const relatedSection = model.categorySlugs[0] ?? "all";
-  const related = getModelsForSection(relatedSection, 5).filter((item) => item.slug !== model.slug).slice(0, 4);
+  const related = getModelsForSection(relatedSection, 8, audienceSelection).filter((item) => item.slug !== model.slug).slice(0, 4);
   const location = locationFor(model);
-  const audience = getImportedModelAudienceStat(model);
+  const audienceStat = getImportedModelAudienceStat(model);
   const statCards: Array<{ Icon: LucideIcon; label: string; value: string }> = [
-    { Icon: Users, label: audience.label, value: audience.value ? audience.value.toLocaleString() : "Feed profile" },
+    { Icon: Users, label: audienceStat.label, value: audienceStat.value ? audienceStat.value.toLocaleString() : "Feed profile" },
     { Icon: MousePointerClick, label: "Clicks", value: model.clickCount.toLocaleString() },
     { Icon: BadgeCheck, label: "Popularity", value: model.popularityScore.toLocaleString() }
   ];
@@ -83,6 +98,11 @@ export default async function ModelProfilePage({ params }: ModelPageProps) {
       />
 
       <section className="bg-[#05070d] py-10 text-white">
+        <div className="mx-auto mb-6 max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="rounded-lg border border-white/10 bg-white/[0.035] p-4">
+            <AudienceFilterBar />
+          </div>
+        </div>
         <div className="mx-auto grid max-w-7xl gap-6 px-4 sm:px-6 lg:grid-cols-[minmax(440px,520px)_1fr] lg:px-8">
           <Card className="overflow-hidden border-white/10 !bg-[#080b12] text-white" style={modelPanelStyle}>
             <CardContent className="!p-0">
@@ -149,7 +169,7 @@ export default async function ModelProfilePage({ params }: ModelPageProps) {
                       model.sourceKeywords.map((keyword, index) => (
                         <Link
                           key={`${model.slug}-${keyword}-${index}`}
-                          href={`/models/category/${model.categorySlugs[index] ?? "uncategorized"}`}
+                          href={categoryHref(model.categorySlugs[index] ?? "uncategorized", audienceSelection)}
                           className="rounded-lg border border-white/10 bg-white/[0.06] px-3 py-2 text-sm font-black text-white/70 transition hover:border-brand-cyan/60 hover:text-brand-cyan"
                         >
                           {keyword}
@@ -167,13 +187,13 @@ export default async function ModelProfilePage({ params }: ModelPageProps) {
               <div>
                 <div className="mb-4 flex items-center justify-between gap-4">
                   <h2 className="text-2xl font-black">Related models</h2>
-                  <Link href={`/models/category/${relatedSection}`} className="text-sm font-black text-brand-amber hover:text-white">
+                  <Link href={categoryHref(relatedSection, audienceSelection)} className="text-sm font-black text-brand-amber hover:text-white">
                     View section
                   </Link>
                 </div>
                 <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
                   {related.map((relatedModel, index) => (
-                    <ImportedModelCard key={relatedModel.id} model={relatedModel} rank={index + 1} />
+                    <ImportedModelCard key={relatedModel.id} audience={audienceSelection} model={relatedModel} rank={index + 1} />
                   ))}
                 </div>
               </div>
