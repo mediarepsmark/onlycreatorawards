@@ -232,8 +232,8 @@ export default function HomePage() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <SectionHeader
             eyebrow="Browse by section"
-            title="Click the creator, enter the section"
-            description="Each section uses a top model image as the doorway, with the label and count anchored over the bottom of the photo."
+            title="Popular sections"
+            description="Click a large model photo to enter each section, with the label and count kept in a clean panel below."
             href="/models"
             linkLabel="Browse Model Sections"
           />

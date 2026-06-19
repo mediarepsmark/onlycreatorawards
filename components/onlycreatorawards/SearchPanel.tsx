@@ -1,11 +1,12 @@
 import { Search } from "lucide-react";
 
-export function SearchPanel({ compact = false }: { compact?: boolean }) {
+export function SearchPanel({ compact = false, defaultQuery = "" }: { compact?: boolean; defaultQuery?: string }) {
   return (
     <form action="/creators" className={compact ? "w-full" : "mx-auto w-full max-w-3xl"}>
       <div className="flex min-h-14 items-center gap-3 rounded-lg border border-brand-cyan/[0.45] bg-black/[0.46] p-2 shadow-cyan-glow backdrop-blur-xl transition focus-within:border-brand-amber/80">
         <Search className="ml-2 h-5 w-5 shrink-0 text-brand-cyan" aria-hidden="true" />
         <input
+          defaultValue={defaultQuery}
           name="query"
           type="search"
           placeholder="Search creators, categories, platforms, locations"

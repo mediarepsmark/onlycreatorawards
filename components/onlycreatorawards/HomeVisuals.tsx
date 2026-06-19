@@ -379,31 +379,30 @@ export function ModelSectionPhotoCard({
 
   return (
     <Link href={target} className="group block h-full">
-      <article className="relative min-h-[260px] overflow-hidden rounded-lg border border-white/10 bg-black transition hover:-translate-y-1 hover:border-brand-amber/60 hover:shadow-gold-glow">
-        {model ? (
-          <ModelPortraitStage
-            src={model.profileImageUrl}
-            alt={modelImageAlt(model)}
-            className="absolute inset-0 transition duration-500 group-hover:scale-[1.01]"
-            contentClassName="top-9"
-            portraitClassName="h-36 w-36 sm:h-40 sm:w-40"
-          />
-        ) : (
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_20%,rgba(34,211,238,0.35),transparent_17rem),linear-gradient(135deg,#020617,#111827)]" />
-        )}
-        <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-black/82 via-black/30 to-transparent" />
-        <div className="absolute inset-x-0 bottom-0 p-4">
-          <div className="rounded-lg border border-white/10 bg-black/68 p-4 shadow-[0_18px_50px_rgba(0,0,0,0.34)] backdrop-blur-sm">
-            <div className="flex items-end justify-between gap-3">
-              <div className="min-w-0">
-                <p className="text-xs font-black uppercase tracking-[0.18em] text-brand-amber">Section</p>
-                <h3 className="mt-1 truncate text-2xl font-black text-white group-hover:text-brand-amber">{section.label}</h3>
-                {model ? <p className="mt-1 truncate text-sm font-bold text-white/55">Featured: {model.displayName}</p> : null}
-              </div>
-              <div className="shrink-0 rounded-lg border border-white/10 bg-white/[0.08] px-3 py-2 text-center">
-                <p className="text-lg font-black text-brand-cyan">{compactNumber(section.count)}</p>
-                <p className="text-[10px] font-black uppercase tracking-normal text-white/45">Models</p>
-              </div>
+      <article className="flex h-full min-h-[420px] flex-col overflow-hidden rounded-lg border border-white/10 bg-[#080b12] transition hover:-translate-y-1 hover:border-brand-amber/60 hover:shadow-gold-glow">
+        <div className="relative min-h-[290px] flex-1 overflow-hidden bg-black">
+          {model ? (
+            <ModelImage
+              src={model.profileImageUrl}
+              alt={modelImageAlt(model)}
+              className={`h-full w-full transition duration-500 group-hover:scale-[1.025] ${clearPortraitImageClass}`}
+            />
+          ) : (
+            <div className="h-full w-full bg-[radial-gradient(circle_at_50%_20%,rgba(34,211,238,0.35),transparent_17rem),linear-gradient(135deg,#020617,#111827)]" />
+          )}
+          <Badge className="absolute left-4 top-4 border-brand-amber/50 bg-black/[0.78] text-brand-amber shadow-gold-glow backdrop-blur">
+            Section
+          </Badge>
+        </div>
+        <div className="border-t border-white/10 bg-[#080b12] p-4">
+          <div className="flex items-end justify-between gap-3">
+            <div className="min-w-0">
+              <h3 className="truncate text-2xl font-black text-white group-hover:text-brand-amber">{section.label}</h3>
+              {model ? <p className="mt-1 truncate text-sm font-bold text-white/62">Featured: {model.displayName}</p> : null}
+            </div>
+            <div className="shrink-0 rounded-lg border border-white/10 bg-[#0e1420] px-3 py-2 text-center">
+              <p className="text-lg font-black text-brand-cyan">{compactNumber(section.count)}</p>
+              <p className="text-[10px] font-black uppercase tracking-normal text-white/55">Models</p>
             </div>
           </div>
         </div>
