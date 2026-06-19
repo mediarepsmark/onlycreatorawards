@@ -10,16 +10,14 @@ import { RewardLeaderboard } from "@/components/onlycreatorawards/RewardLeaderbo
 import { SiteShell } from "@/components/onlycreatorawards/SiteShell";
 import { Card, CardContent } from "@/components/ui/card";
 import { requireRole } from "@/lib/onlycreatorawards/auth";
-import { getAdminResource, getAdminResources, getCurrentRewardCampaign, getFanRewardScores } from "@/lib/onlycreatorawards/repository";
+import { getAdminResource, getCurrentRewardCampaign, getFanRewardScores } from "@/lib/onlycreatorawards/repository";
 import { buildMetadata } from "@/lib/onlycreatorawards/seo";
 
 type AdminSectionPageProps = {
   params: Promise<{ section: string }>;
 };
 
-export function generateStaticParams() {
-  return getAdminResources().map((resource) => ({ section: resource.key }));
-}
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: AdminSectionPageProps) {
   const { section } = await params;
