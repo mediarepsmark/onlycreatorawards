@@ -35,9 +35,34 @@ function asString(value) {
   return typeof value === "string" ? value.trim() : "";
 }
 
+function isPlaceholderText(value) {
+  return ["n/a", "na", "none", "null", "undefined", "-", "--"].includes(value.trim().toLowerCase());
+}
+
 function asNullableString(value) {
   const text = asString(value);
-  return text.length ? text : null;
+  return text.length && !isPlaceholderText(text) ? text : null;
+}
+
+function asNullableUrl(value) {
+  const text = asNullableString(value);
+  if (!text) return null;
+
+  try {
+    const url = new URL(text);
+    return url.protocol === "http:" || url.protocol === "https:" ? text : null;
+  } catch {
+    return null;
+  }
+}
+
+function firstNullableUrl(...values) {
+  for (const value of values) {
+    const url = asNullableUrl(value);
+    if (url) return url;
+  }
+
+  return null;
 }
 
 function metric(value) {
@@ -169,6 +194,18 @@ function normalizeModel(raw, index) {
   const categorySlugs = keywordSlugsFrom(rawCategory);
   const stats = calculatePopularity(raw, index);
   const clickUrl = asNullableString(raw.click_url || raw.url || raw.onlyfans_url);
+  const profileImageUrl = firstNullableUrl(
+    raw.profile_image,
+    raw.profileImageUrl,
+    raw.image,
+    raw.image_url,
+    raw.avatar,
+    raw.avatar_url,
+    raw.thumbnail,
+    raw.thumb,
+    raw.profile_pic,
+    raw.picture
+  );
 
   return {
     id: `traffichaus:${slug}`,
@@ -180,7 +217,7 @@ function normalizeModel(raw, index) {
     sourceName: sourceName || displayName,
     username: username || null,
     handle: username ? `@${username}` : null,
-    profileImageUrl: asNullableString(raw.profile_image || raw.image || raw.image_url),
+    profileImageUrl,
     imageAltText: asNullableString(raw.image_alt_text),
     onlyfansUrl: clickUrl,
     clickUrl,
@@ -198,7 +235,7 @@ function normalizeModel(raw, index) {
     categorySlugs,
     categoryLabels: categorySlugs.map(titleizeSlug),
     status: "ACTIVE",
-    imageStatus: "SOURCE_PROVIDED",
+    imageStatus: profileImageUrl ? "SOURCE_PROVIDED" : "MISSING_IMAGE",
     lastImportedAt: new Date().toISOString(),
     ...stats
   };

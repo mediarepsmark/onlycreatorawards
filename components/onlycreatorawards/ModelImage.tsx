@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, type ImgHTMLAttributes } from "react";
-import { Sparkles } from "lucide-react";
+import { useEffect, useState, type ImgHTMLAttributes } from "react";
+import { ImageIcon } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
@@ -14,6 +14,21 @@ type ModelImageProps = {
   loading?: ImgHTMLAttributes<HTMLImageElement>["loading"];
 };
 
+const placeholderImageValues = new Set(["n/a", "na", "none", "null", "undefined", "-", "--"]);
+
+function safeImageSrc(src?: string | null) {
+  const text = src?.trim();
+  if (!text || placeholderImageValues.has(text.toLowerCase())) return null;
+  if (text.startsWith("/")) return text;
+
+  try {
+    const url = new URL(text);
+    return url.protocol === "http:" || url.protocol === "https:" ? text : null;
+  } catch {
+    return null;
+  }
+}
+
 export function ModelImage({
   src,
   alt,
@@ -23,20 +38,25 @@ export function ModelImage({
   loading = "lazy"
 }: ModelImageProps) {
   const [failed, setFailed] = useState(false);
+  const imageSrc = safeImageSrc(src);
 
-  if (!src || failed) {
+  useEffect(() => {
+    setFailed(false);
+  }, [imageSrc]);
+
+  if (!imageSrc || failed) {
     return (
       <div
         aria-label={alt || undefined}
         className={cn(
-          "flex h-full w-full items-center justify-center overflow-hidden bg-[radial-gradient(circle_at_50%_20%,rgba(168,85,247,0.36),transparent_16rem),linear-gradient(135deg,#111827,#020617)]",
+          "flex h-full w-full items-center justify-center overflow-hidden bg-[radial-gradient(circle_at_50%_18%,rgba(246,198,84,0.24),transparent_14rem),linear-gradient(135deg,#111827,#020617)]",
           className,
           fallbackClassName
         )}
         role={alt ? "img" : undefined}
       >
         <div className="flex h-16 w-16 items-center justify-center rounded-lg border border-brand-amber/30 bg-black/40 shadow-gold-glow backdrop-blur">
-          <Sparkles className={cn("h-8 w-8 text-brand-amber", iconClassName)} aria-hidden="true" />
+          <ImageIcon className={cn("h-8 w-8 text-brand-amber", iconClassName)} aria-hidden="true" />
         </div>
       </div>
     );
@@ -49,7 +69,7 @@ export function ModelImage({
       decoding="async"
       loading={loading}
       onError={() => setFailed(true)}
-      src={src}
+      src={imageSrc}
     />
   );
 }

@@ -73,6 +73,7 @@ const overridesPath =
   process.env.MODEL_DIRECTORY_OVERRIDES_PATH || path.join(process.cwd(), "data", "model-section-overrides.json");
 const jsonCache = new Map<string, { mtimeMs: number; size: number; value: unknown }>();
 const normalizedModelsCache = new WeakMap<ModelDirectoryCache, ImportedModel[]>();
+const placeholderTextValues = new Set(["n/a", "na", "none", "null", "undefined", "-", "--"]);
 
 function readJson<T>(filePath: string, fallback: T): T {
   try {
@@ -107,6 +108,26 @@ function normalizeCategoryText(value: string | null | undefined) {
   return text.toLowerCase() === "uncategorized" ? "Amateur" : text;
 }
 
+function cleanNullableText(value: unknown) {
+  if (typeof value !== "string") return null;
+  const text = value.trim();
+  if (!text || placeholderTextValues.has(text.toLowerCase())) return null;
+  return text;
+}
+
+function cleanImageUrl(value: unknown) {
+  const text = cleanNullableText(value);
+  if (!text) return null;
+  if (text.startsWith("/")) return text;
+
+  try {
+    const url = new URL(text);
+    return url.protocol === "http:" || url.protocol === "https:" ? text : null;
+  } catch {
+    return null;
+  }
+}
+
 function normalizedSection(section: ModelDirectorySection): ModelDirectorySection {
   return {
     ...section,
@@ -138,6 +159,7 @@ function normalizedCategoryLabels(model: ImportedModel, categorySlugs: string[])
 
 function normalizeImportedModel(model: ImportedModel): ImportedModel {
   const categorySlugs = model.categorySlugs.length ? model.categorySlugs : ["uncategorized"];
+  const profileImageUrl = cleanImageUrl(model.profileImageUrl);
   const sourceKeywords = model.sourceKeywords.length
     ? model.sourceKeywords.map((keyword) => normalizeCategoryText(keyword) ?? "Amateur")
     : normalizedCategoryLabels(model, categorySlugs);
@@ -150,6 +172,8 @@ function normalizeImportedModel(model: ImportedModel): ImportedModel {
   return {
     ...model,
     rawCategory: normalizeCategoryText(model.rawCategory),
+    profileImageUrl,
+    imageStatus: profileImageUrl ? model.imageStatus : "MISSING_IMAGE",
     sourceKeywords,
     categorySlugs,
     categoryLabels: normalizedCategoryLabels(model, categorySlugs),

@@ -22,6 +22,9 @@ type ModelPageProps = {
   params: Promise<{ slug: string }>;
 };
 
+const modelPanelStyle = { backgroundColor: "#080b12", color: "#fff" };
+const modelInsetStyle = { backgroundColor: "#0e1420" };
+
 export const dynamic = "force-dynamic";
 
 export function generateStaticParams() {
@@ -37,8 +40,8 @@ export async function generateMetadata({ params }: ModelPageProps) {
   return buildMetadata({
     title: model ? `${model.displayName} OnlyFans Profile | OnlyCreatorAwards` : "Model Profile | OnlyCreatorAwards",
     description: model
-      ? `${model.displayName} model profile, source keywords, popularity signals, category rankings, and OnlyFans link.`
-      : "Imported model profile.",
+      ? `${model.displayName} creator profile, profile keywords, popularity signals, category rankings, and OnlyFans link.`
+      : "Creator profile.",
     path: `/model/${slug}`,
     index: Boolean(model)
   });
@@ -76,12 +79,12 @@ export default async function ModelProfilePage({ params }: ModelPageProps) {
       <PageHeader
         eyebrow="Model profile"
         title={model.displayName}
-        description="Imported model profile with source-feed ordering, popularity signals, category links, and outbound OnlyFans destination."
+        description="Creator profile with popularity signals, category links, and a direct OnlyFans destination."
       />
 
       <section className="bg-[#05070d] py-10 text-white">
         <div className="mx-auto grid max-w-7xl gap-6 px-4 sm:px-6 lg:grid-cols-[minmax(440px,520px)_1fr] lg:px-8">
-          <Card className="overflow-hidden border-white/10 bg-white/[0.045] text-white">
+          <Card className="overflow-hidden border-white/10 !bg-[#080b12] text-white" style={modelPanelStyle}>
             <CardContent className="!p-0">
               <div className="relative aspect-[4/5] overflow-hidden bg-[#05070d]">
                 <ModelImage
@@ -91,10 +94,10 @@ export default async function ModelProfilePage({ params }: ModelPageProps) {
                   loading="eager"
                 />
                 <Badge className="absolute left-4 top-4 border-brand-amber/50 bg-black/70 text-brand-amber">
-                  Source #{model.sourceOrder}
+                  Rank #{model.sourceOrder}
                 </Badge>
               </div>
-              <div className="space-y-4 p-5">
+              <div className="space-y-4 !bg-[#080b12] p-5" style={modelPanelStyle}>
                 {model.handle ? <p className="text-lg font-black text-white/70">{model.handle}</p> : null}
                 {outboundUrl ? (
                   <a
@@ -112,11 +115,15 @@ export default async function ModelProfilePage({ params }: ModelPageProps) {
           </Card>
 
           <div className="space-y-6">
-            <Card className="border-white/10 bg-white/[0.045] text-white">
+            <Card className="border-white/10 !bg-[#080b12] text-white" style={modelPanelStyle}>
               <CardContent>
                 <div className="grid gap-4 sm:grid-cols-3">
                   {statCards.map(({ Icon, label, value }) => (
-                    <div key={label} className="rounded-lg border border-white/10 bg-black/25 p-4">
+                    <div
+                      key={label}
+                      className="rounded-lg border border-white/10 !bg-[#0e1420] p-4"
+                      style={modelInsetStyle}
+                    >
                       <Icon className="h-6 w-6 text-brand-cyan" aria-hidden="true" />
                       <p className="mt-3 text-sm font-black uppercase tracking-[0.16em] text-white/45">{label}</p>
                       <p className="mt-1 text-2xl font-black">{value}</p>
@@ -126,17 +133,17 @@ export default async function ModelProfilePage({ params }: ModelPageProps) {
               </CardContent>
             </Card>
 
-            <Card className="border-white/10 bg-white/[0.045] text-white">
+            <Card className="border-white/10 !bg-[#080b12] text-white" style={modelPanelStyle}>
               <CardContent>
                 <h2 className="text-2xl font-black">Directory details</h2>
                 <div className="mt-5 grid gap-4 md:grid-cols-2">
                   {model.price ? <Detail label="Price" value={model.price} /> : null}
                   {location ? <Detail label="Location" value={location} Icon={MapPin} /> : null}
-                  <Detail label="Feed sort" value={String(model.sourceSort)} />
+                  <Detail label="Directory rank" value={String(model.sourceSort)} />
                   <Detail label="Last imported" value={new Date(model.lastImportedAt).toLocaleString()} Icon={CalendarClock} />
                 </div>
                 <div className="mt-6">
-                  <h3 className="text-sm font-black uppercase tracking-[0.18em] text-brand-amber">Source keywords</h3>
+                  <h3 className="text-sm font-black uppercase tracking-[0.18em] text-brand-amber">Profile keywords</h3>
                   <div className="mt-3 flex flex-wrap gap-2">
                     {model.sourceKeywords.length ? (
                       model.sourceKeywords.map((keyword, index) => (
@@ -188,7 +195,7 @@ function Detail({
   Icon?: LucideIcon;
 }) {
   return (
-    <div className="rounded-lg border border-white/10 bg-black/25 p-4">
+    <div className="rounded-lg border border-white/10 !bg-[#0e1420] p-4" style={modelInsetStyle}>
       {Icon ? <Icon className="mb-2 h-5 w-5 text-brand-amber" aria-hidden="true" /> : null}
       <p className="text-xs font-black uppercase tracking-[0.16em] text-white/45">{label}</p>
       <p className="mt-1 font-black text-white">{value}</p>
