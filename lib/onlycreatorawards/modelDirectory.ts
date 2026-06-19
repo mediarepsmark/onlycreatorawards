@@ -50,6 +50,17 @@ export type ModelDirectorySection = {
   href: string;
 };
 
+export type ModelPromotionControl = {
+  label?: string;
+  scoreAdjustment?: number;
+  sponsored?: boolean;
+  suppressed?: boolean;
+  hidden?: boolean;
+  brokenImage?: boolean;
+  homepageBlocked?: boolean;
+  notes?: string;
+};
+
 type ModelDirectoryCache = {
   importedAt: string;
   sourceUrl: string;
@@ -67,10 +78,22 @@ type ModelDirectoryOverrides = {
   sections?: Record<string, string[]>;
 };
 
+type ModelPromotionOverrides = {
+  comment?: string;
+  homepage?: {
+    hero?: string[];
+    featured?: string[];
+    leaderboard?: string[];
+  };
+  models?: Record<string, ModelPromotionControl>;
+};
+
 const cachePath =
   process.env.MODEL_DIRECTORY_CACHE_PATH || path.join(process.cwd(), "data", "traffichaus-models.json");
 const overridesPath =
   process.env.MODEL_DIRECTORY_OVERRIDES_PATH || path.join(process.cwd(), "data", "model-section-overrides.json");
+const promotionOverridesPath =
+  process.env.MODEL_PROMOTION_OVERRIDES_PATH || path.join(process.cwd(), "data", "model-promotion-overrides.json");
 const jsonCache = new Map<string, { mtimeMs: number; size: number; value: unknown }>();
 const normalizedModelsCache = new WeakMap<ModelDirectoryCache, ImportedModel[]>();
 const placeholderTextValues = new Set(["n/a", "na", "none", "null", "undefined", "-", "--"]);
@@ -159,7 +182,8 @@ function normalizedCategoryLabels(model: ImportedModel, categorySlugs: string[])
 
 function normalizeImportedModel(model: ImportedModel): ImportedModel {
   const categorySlugs = model.categorySlugs.length ? model.categorySlugs : ["uncategorized"];
-  const profileImageUrl = cleanImageUrl(model.profileImageUrl);
+  const control = getModelPromotionControl(model.slug);
+  const profileImageUrl = control.brokenImage ? null : cleanImageUrl(model.profileImageUrl);
   const sourceKeywords = model.sourceKeywords.length
     ? model.sourceKeywords.map((keyword) => normalizeCategoryText(keyword) ?? "Amateur")
     : normalizedCategoryLabels(model, categorySlugs);
@@ -173,7 +197,7 @@ function normalizeImportedModel(model: ImportedModel): ImportedModel {
     ...model,
     rawCategory: normalizeCategoryText(model.rawCategory),
     profileImageUrl,
-    imageStatus: profileImageUrl ? model.imageStatus : "MISSING_IMAGE",
+    imageStatus: control.brokenImage ? "BROKEN_IMAGE" : profileImageUrl ? model.imageStatus : "MISSING_IMAGE",
     sourceKeywords,
     categorySlugs,
     categoryLabels: normalizedCategoryLabels(model, categorySlugs),
@@ -197,19 +221,61 @@ function emptyCache(): ModelDirectoryCache {
 }
 
 function visible(model: ImportedModel) {
-  return model.status !== "REMOVED" && model.status !== "HIDDEN";
+  const control = getModelPromotionControl(model.slug);
+  return model.status !== "REMOVED" && model.status !== "HIDDEN" && !control.hidden;
 }
 
 function sourceOrdered(models: ImportedModel[]) {
   return [...models].sort((first, second) => first.sourceOrder - second.sourceOrder);
 }
 
+function uniqueBySlug(models: ImportedModel[]) {
+  const seen = new Set<string>();
+
+  return models.filter((model) => {
+    if (seen.has(model.slug)) return false;
+    seen.add(model.slug);
+    return true;
+  });
+}
+
+function logMetric(value: number) {
+  return value > 0 ? Math.log10(value + 1) : 0;
+}
+
+export function getImportedModelOrganicScore(model: ImportedModel) {
+  const sourceOrderBoost = Math.max(0, 200 - (model.sourceSort || model.sourceOrder + 1)) * 0.7;
+
+  return Number(
+    (
+      Math.min(model.popularityScore, 1000) +
+      logMetric(model.sourceFanCount) * 430 +
+      logMetric(model.sourceLikeCount) * 75 +
+      logMetric(model.sourcePostCount) * 24 +
+      logMetric(model.sourceVideoCount) * 12 +
+      logMetric(model.sourceImageCount) * 8 +
+      model.clickCount * 4 +
+      model.viewCount * 1.5 +
+      sourceOrderBoost
+    ).toFixed(2)
+  );
+}
+
+export function getImportedModelEffectiveScore(model: ImportedModel) {
+  const control = getModelPromotionControl(model.slug);
+  const adjustment = Number.isFinite(control.scoreAdjustment) ? Number(control.scoreAdjustment) : 0;
+  const suppressPenalty = control.suppressed ? 100_000 : 0;
+  const brokenImagePenalty = control.brokenImage || model.imageStatus === "MISSING_IMAGE" ? 2_500 : 0;
+
+  return Number((getImportedModelOrganicScore(model) + adjustment - suppressPenalty - brokenImagePenalty).toFixed(2));
+}
+
 function popularityOrdered(models: ImportedModel[]) {
   return [...models].sort(
     (first, second) =>
+      getImportedModelEffectiveScore(second) - getImportedModelEffectiveScore(first) ||
+      second.sourceFanCount - first.sourceFanCount ||
       second.clickCount - first.clickCount ||
-      second.viewCount - first.viewCount ||
-      second.popularityScore - first.popularityScore ||
       first.sourceOrder - second.sourceOrder
   );
 }
@@ -239,6 +305,14 @@ function getOverrides() {
   return readJson<ModelDirectoryOverrides>(overridesPath, { sections: {} });
 }
 
+function getPromotionOverrides() {
+  return readJson<ModelPromotionOverrides>(promotionOverridesPath, { homepage: {}, models: {} });
+}
+
+export function getModelPromotionControl(slug: string): ModelPromotionControl {
+  return getPromotionOverrides().models?.[slug] ?? {};
+}
+
 function applyOverrides(sectionSlug: string, models: ImportedModel[]) {
   const overrides = getOverrides().sections ?? {};
   const slugs = [...(overrides[sectionSlug] ?? []), ...(sectionSlug !== "all" ? overrides.all ?? [] : [])]
@@ -263,7 +337,7 @@ export function getImportedModels() {
   const cached = normalizedModelsCache.get(cache);
   if (cached) return cached;
 
-  const models = sourceOrdered(cache.models.filter(visible).map(normalizeImportedModel));
+  const models = uniqueBySlug(sourceOrdered(cache.models.filter(visible).map(normalizeImportedModel)));
   normalizedModelsCache.set(cache, models);
   return models;
 }
@@ -322,9 +396,37 @@ export function getTopImportedModels(limit = 12) {
   return popularityOrdered(getImportedModels()).slice(0, limit);
 }
 
+function homepageEligible(model: ImportedModel) {
+  const control = getModelPromotionControl(model.slug);
+  return Boolean(model.profileImageUrl) && !control.homepageBlocked && !control.brokenImage;
+}
+
+function pickHomepageModels(slugs: string[], count: number, used: Set<string>, models: ImportedModel[]) {
+  const bySlug = new Map(models.map((model) => [model.slug, model]));
+  const pinned = slugs
+    .map((slug) => bySlug.get(slug))
+    .filter((model): model is ImportedModel => Boolean(model && homepageEligible(model) && !used.has(model.slug)));
+  const pinnedSlugs = new Set(pinned.map((model) => model.slug));
+  const fill = popularityOrdered(models).filter((model) => homepageEligible(model) && !used.has(model.slug) && !pinnedSlugs.has(model.slug));
+  const picked = [...pinned, ...fill].slice(0, count);
+  picked.forEach((model) => used.add(model.slug));
+  return picked;
+}
+
+export function getHomepageModelPlacements() {
+  const models = getImportedModels();
+  const homepage = getPromotionOverrides().homepage ?? {};
+  const used = new Set<string>();
+  const hero = pickHomepageModels(homepage.hero ?? [], 3, used, models);
+  const featured = pickHomepageModels(homepage.featured ?? [], 8, used, models);
+  const leaderboard = pickHomepageModels(homepage.leaderboard ?? [], 5, used, models);
+
+  return { hero, featured, leaderboard };
+}
+
 export function getFeaturedModelForSection(slug: string) {
   const models = getModelsForSection(slug);
-  return models.find((model) => Boolean(model.profileImageUrl)) ?? models[0];
+  return models.find(homepageEligible) ?? models[0];
 }
 
 export function getImportedModelAudienceStat(model: ImportedModel) {
@@ -348,20 +450,50 @@ export function getModelDirectoryStats() {
 }
 
 export function getAdminModelRows(limit = 100) {
-  return getImportedModels()
+  return popularityOrdered(getImportedModels())
     .slice(0, limit)
     .map((model) => ({
+      slug: model.slug,
       id: model.sourceOrder,
       sort: model.sourceSort,
       public: model.status === "ACTIVE",
       name: model.sourceName,
       username: model.username ?? "",
-      image: model.profileImageUrl ? "source image" : "none",
+      image: model.imageStatus === "BROKEN_IMAGE" ? "flagged broken" : model.profileImageUrl ? "source image" : "none",
       price: model.price ?? "",
       updatedAt: model.lastImportedAt,
       category: model.rawCategory ?? "Amateur",
       popularity: model.popularityScore,
+      organicScore: getImportedModelOrganicScore(model),
+      effectiveScore: getImportedModelEffectiveScore(model),
+      promotion: getModelPromotionControl(model.slug),
       clicks: model.clickCount,
       views: model.viewCount
     }));
+}
+
+export function getModelPromotionAdminSummary() {
+  const overrides = getPromotionOverrides();
+  const models = getImportedModels();
+  const bySlug = new Map(models.map((model) => [model.slug, model]));
+  const rows = Object.entries(overrides.models ?? {}).map(([slug, control]) => {
+    const model = bySlug.get(slug);
+
+    return {
+      slug,
+      control,
+      model,
+      organicScore: model ? getImportedModelOrganicScore(model) : 0,
+      effectiveScore: model ? getImportedModelEffectiveScore(model) : 0
+    };
+  });
+  const brokenImageRows = models
+    .filter((model) => model.imageStatus === "BROKEN_IMAGE" || model.imageStatus === "MISSING_IMAGE")
+    .slice(0, 40);
+
+  return {
+    homepage: overrides.homepage ?? {},
+    rows,
+    brokenImageRows
+  };
 }

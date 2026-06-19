@@ -31,7 +31,12 @@ import { CreatorAvatar } from "@/components/onlycreatorawards/CreatorAvatar";
 import { ModelImage } from "@/components/onlycreatorawards/ModelImage";
 import { ModelPortraitStage } from "@/components/onlycreatorawards/ModelPortraitStage";
 import { Badge } from "@/components/ui/badge";
-import { getImportedModelAudienceStat, type ImportedModel, type ModelDirectorySection } from "@/lib/onlycreatorawards/modelDirectory";
+import {
+  getImportedModelAudienceStat,
+  getModelPromotionControl,
+  type ImportedModel,
+  type ModelDirectorySection
+} from "@/lib/onlycreatorawards/modelDirectory";
 import { getCreatorStarsLevel } from "@/lib/onlycreatorawards/scoring";
 import type { Award as AwardType, CreatorProfile } from "@/lib/onlycreatorawards/types";
 
@@ -216,6 +221,7 @@ export function SpotlightCreatorCard({ creator, rank }: { creator: CreatorProfil
 export function FeaturedModelPhotoCard({ model, rank }: { model: ImportedModel; rank: number }) {
   const outboundUrl = model.onlyfansUrl || model.clickUrl;
   const audience = audienceDisplay(model);
+  const promotion = getModelPromotionControl(model.slug);
 
   return (
     <Link href={`/model/${model.slug}`} className="group block h-full">
@@ -230,7 +236,9 @@ export function FeaturedModelPhotoCard({ model, rank }: { model: ImportedModel; 
         <div className="absolute inset-x-0 bottom-0 h-44 bg-gradient-to-t from-black/82 via-black/28 to-transparent" />
         <div className="absolute left-4 top-4 flex gap-2">
           <Badge className="border-brand-amber/50 bg-black/70 text-brand-amber">#{rank}</Badge>
-          <Badge className="border-brand-cyan/40 bg-black/70 text-brand-cyan">Live feed</Badge>
+          <Badge className="border-brand-cyan/40 bg-black/70 text-brand-cyan">
+            {promotion.sponsored ? "Sponsored" : "Live feed"}
+          </Badge>
         </div>
         <div className="absolute inset-x-0 bottom-0 p-4">
           <div className="rounded-lg border border-white/10 bg-black/68 p-4 shadow-[0_18px_50px_rgba(0,0,0,0.36)] backdrop-blur-sm">
@@ -304,6 +312,7 @@ export function ModelHeroStack({ models }: { models: ImportedModel[] }) {
   }
 
   const primaryAudience = audienceDisplay(primary);
+  const primaryPromotion = getModelPromotionControl(primary.slug);
 
   return (
     <div className="relative mx-auto max-w-[500px] lg:ml-auto lg:mr-0">
@@ -320,7 +329,9 @@ export function ModelHeroStack({ models }: { models: ImportedModel[] }) {
             loading="eager"
           />
           <div className="absolute inset-x-0 bottom-0 h-72 bg-gradient-to-t from-black/82 via-black/24 to-transparent" />
-          <Badge className="absolute left-4 top-4 border-brand-amber/50 bg-black/70 text-brand-amber">Featured profile</Badge>
+          <Badge className="absolute left-4 top-4 border-brand-amber/50 bg-black/70 text-brand-amber">
+            {primaryPromotion.sponsored ? "Sponsored feature" : "Featured profile"}
+          </Badge>
           <div className="absolute inset-x-0 bottom-0 p-5">
             <div className="rounded-lg border border-white/10 bg-black/68 p-5 shadow-[0_18px_50px_rgba(0,0,0,0.38)] backdrop-blur-sm">
               <p className="text-xs font-black uppercase tracking-[0.18em] text-brand-cyan">Live from the feed</p>

@@ -25,9 +25,9 @@ import { SiteShell } from "@/components/onlycreatorawards/SiteShell";
 import { Badge } from "@/components/ui/badge";
 import {
   getFeaturedModelForSection,
+  getHomepageModelPlacements,
   getModelDirectorySections,
   getModelDirectoryStats,
-  getTopImportedModels
 } from "@/lib/onlycreatorawards/modelDirectory";
 import { getAwardYears, getAwards, getCreators, siteConfig } from "@/lib/onlycreatorawards/repository";
 import { buildMetadata, organizationSchema, websiteSchema } from "@/lib/onlycreatorawards/seo";
@@ -43,9 +43,10 @@ export const metadata = buildMetadata({
 
 export default function HomePage() {
   const modelStats = getModelDirectoryStats();
-  const featuredModels = getTopImportedModels(12);
-  const heroModels = featuredModels.slice(0, 3);
-  const modelLeaderboard = featuredModels.slice(0, 5);
+  const homepageModels = getHomepageModelPlacements();
+  const featuredModels = homepageModels.featured;
+  const heroModels = homepageModels.hero;
+  const modelLeaderboard = homepageModels.leaderboard;
   const modelSections = getModelDirectorySections()
     .filter((section) => section.count >= 5)
     .slice(0, 8)

@@ -11,3 +11,4 @@ node_modules/
 tmp/
 data/*.json
 !data/.gitkeep
+!data/model-promotion-overrides.json

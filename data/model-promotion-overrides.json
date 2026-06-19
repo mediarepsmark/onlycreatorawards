@@ -1,0 +1,36 @@
+{
+  "comment": "Manual model promotion controls. Positive scoreAdjustment boosts; negative scoreAdjustment lowers. sponsored=true should be shown with a clear public sponsored/featured label. hidden removes the model. suppressed pushes it down. brokenImage removes the source image from prominent placements until fixed.",
+  "homepage": {
+    "hero": [
+      "skylarmaexo"
+    ],
+    "featured": [],
+    "leaderboard": []
+  },
+  "models": {
+    "skylarmaexo": {
+      "label": "Premium CPC",
+      "scoreAdjustment": 50000,
+      "sponsored": true,
+      "notes": "Highest CPC partner and strong audience metric; pin to primary homepage hero slot."
+    },
+    "lyracr0w0-vip": {
+      "label": "Reduce homepage frequency",
+      "scoreAdjustment": -250000,
+      "suppressed": true,
+      "notes": "Lowered because a source-score outlier was making this profile over-present on the homepage."
+    },
+    "purelatex": {
+      "label": "Broken image review",
+      "brokenImage": true,
+      "homepageBlocked": true,
+      "notes": "Current source image URL returns 404. Keep out of prominent image slots until refreshed."
+    },
+    "sabrina-fontana": {
+      "label": "Broken image review",
+      "brokenImage": true,
+      "homepageBlocked": true,
+      "notes": "Current source image URL returns 404. Keep out of prominent image slots until refreshed."
+    }
+  }
+}
