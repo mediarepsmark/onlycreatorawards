@@ -112,12 +112,14 @@ export function ModelDirectoryAdminPanel({ section }: { section: string }) {
             <FileJson className="h-8 w-8 text-brand-blue" aria-hidden="true" />
             <h2 className="mt-4 text-2xl font-black text-ink">Daily import command</h2>
             <p className="mt-2 text-sm leading-6 text-muted">
-              The production cron should run once per day and write the latest cache into <code>data/traffichaus-models.json</code>.
+              The production cron should run once per day, write the latest cache into <code>data/traffichaus-models.json</code>, then audit the top
+              thumbnail candidates into <code>data/model-image-overrides.json</code>.
             </p>
             <pre className="mt-4 overflow-x-auto rounded-lg bg-ink p-4 text-sm font-bold text-white">
               <code>
                 {`cd /home/httpd/html/onlycreatorawards.com/app
-/usr/bin/docker run --rm -v "$PWD:/work" -w /work node:22-bookworm-slim node scripts/sync-traffichaus-models.mjs`}
+/usr/bin/docker run --rm -v "$PWD:/work" -w /work node:22-bookworm-slim node scripts/sync-traffichaus-models.mjs
+/usr/bin/docker run --rm -v "$PWD:/work" -w /work node:22-bookworm-slim node scripts/audit-model-images.mjs --limit=1000`}
               </code>
             </pre>
           </CardContent>

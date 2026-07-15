@@ -31,6 +31,22 @@
       "brokenImage": true,
       "homepageBlocked": true,
       "notes": "Current source image URL returns 404. Keep out of prominent image slots until refreshed."
+    },
+    "valentiinaperez": {
+      "label": "Broken image review",
+      "scoreAdjustment": -250000,
+      "suppressed": true,
+      "brokenImage": true,
+      "homepageBlocked": true,
+      "notes": "Current source image URL returns 404. Keep out of prominent image slots until refreshed."
+    },
+    "vitoria-alves": {
+      "label": "Broken image review",
+      "scoreAdjustment": -250000,
+      "suppressed": true,
+      "brokenImage": true,
+      "homepageBlocked": true,
+      "notes": "Current source image URL returns 404. Keep out of prominent image slots until refreshed."
     }
   }
 }

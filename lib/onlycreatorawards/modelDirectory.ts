@@ -100,6 +100,8 @@ const overridesPath =
   process.env.MODEL_DIRECTORY_OVERRIDES_PATH || path.join(process.cwd(), "data", "model-section-overrides.json");
 const promotionOverridesPath =
   process.env.MODEL_PROMOTION_OVERRIDES_PATH || path.join(process.cwd(), "data", "model-promotion-overrides.json");
+const imageAuditOverridesPath =
+  process.env.MODEL_IMAGE_OVERRIDES_PATH || path.join(process.cwd(), "data", "model-image-overrides.json");
 const jsonCache = new Map<string, { mtimeMs: number; size: number; value: unknown }>();
 const normalizedModelsCache = new WeakMap<ModelDirectoryCache, ImportedModel[]>();
 const audienceCache = new WeakMap<ImportedModel, ModelAudience>();
@@ -332,7 +334,7 @@ export function getImportedModelEffectiveScore(model: ImportedModel, audience?: 
   const control = getModelPromotionControl(model.slug);
   const adjustment = Number.isFinite(control.scoreAdjustment) ? Number(control.scoreAdjustment) : 0;
   const suppressPenalty = control.suppressed ? 100_000 : 0;
-  const brokenImagePenalty = control.brokenImage || model.imageStatus === "MISSING_IMAGE" ? 2_500 : 0;
+  const brokenImagePenalty = control.brokenImage || model.imageStatus === "MISSING_IMAGE" || model.imageStatus === "BROKEN_IMAGE" ? 2_500 : 0;
   const womenPriorityBoost = audience && !audience.includes("men") && getImportedModelAudience(model) === "women" ? 4_000 : 0;
 
   const score = Number((getImportedModelOrganicScore(model) + adjustment + womenPriorityBoost - suppressPenalty - brokenImagePenalty).toFixed(2));
@@ -392,7 +394,24 @@ function getOverrides() {
 }
 
 function getPromotionOverrides() {
-  return readJson<ModelPromotionOverrides>(promotionOverridesPath, { homepage: {}, models: {} });
+  const manual = readJson<ModelPromotionOverrides>(promotionOverridesPath, { homepage: {}, models: {} });
+  const imageAudit = readJson<ModelPromotionOverrides>(imageAuditOverridesPath, { homepage: {}, models: {} });
+  const models: Record<string, ModelPromotionControl> = { ...(manual.models ?? {}) };
+
+  Object.entries(imageAudit.models ?? {}).forEach(([slug, control]) => {
+    const existing = models[slug] ?? {};
+    models[slug] = {
+      ...existing,
+      ...control,
+      label: existing.label ?? control.label,
+      notes: [existing.notes, control.notes].filter(Boolean).join(" | ") || undefined
+    };
+  });
+
+  return {
+    ...manual,
+    models
+  };
 }
 
 export function getModelPromotionControl(slug: string): ModelPromotionControl {
@@ -505,7 +524,7 @@ export function getTopImportedModels(limit = 12, audience?: ModelAudience[]) {
 
 function homepageEligible(model: ImportedModel) {
   const control = getModelPromotionControl(model.slug);
-  return Boolean(model.profileImageUrl) && !control.homepageBlocked && !control.brokenImage;
+  return Boolean(model.profileImageUrl) && model.imageStatus !== "BROKEN_IMAGE" && model.imageStatus !== "MISSING_IMAGE" && !control.homepageBlocked && !control.brokenImage;
 }
 
 function pickHomepageModels(slugs: string[], count: number, used: Set<string>, models: ImportedModel[], audience = defaultModelAudienceSelection) {
