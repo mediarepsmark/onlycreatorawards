@@ -102,6 +102,10 @@ const promotionOverridesPath =
   process.env.MODEL_PROMOTION_OVERRIDES_PATH || path.join(process.cwd(), "data", "model-promotion-overrides.json");
 const jsonCache = new Map<string, { mtimeMs: number; size: number; value: unknown }>();
 const normalizedModelsCache = new WeakMap<ModelDirectoryCache, ImportedModel[]>();
+const audienceCache = new WeakMap<ImportedModel, ModelAudience>();
+const organicScoreCache = new WeakMap<ImportedModel, number>();
+const effectiveScoreCache = new WeakMap<ImportedModel, Map<string, number>>();
+const popularityModelsCache = new WeakMap<ModelDirectoryCache, Map<string, ImportedModel[]>>();
 const placeholderTextValues = new Set(["n/a", "na", "none", "null", "undefined", "-", "--"]);
 
 function readJson<T>(filePath: string, fallback: T): T {
@@ -204,17 +208,20 @@ function modelAudienceHaystack(model: ImportedModel) {
 }
 
 export function getImportedModelAudience(model: ImportedModel): ModelAudience {
+  const cached = audienceCache.get(model);
+  if (cached) return cached;
+
   const haystack = modelAudienceHaystack(model);
+  let audience: ModelAudience = "women";
 
   if (/(^|[^a-z])(trans|transgender|transsexual|shemale|ladyboy|mtf|ftm|ts)([^a-z]|$)/i.test(haystack)) {
-    return "trans";
+    audience = "trans";
+  } else if (/(^|[^a-z])(male|man|men|guy|guys|boy|boys|twink|daddy|hunk|gay|bear|jock)([^a-z]|$)/i.test(haystack)) {
+    audience = "men";
   }
 
-  if (/(^|[^a-z])(male|man|men|guy|guys|boy|boys|twink|daddy|hunk|gay|bear|jock)([^a-z]|$)/i.test(haystack)) {
-    return "men";
-  }
-
-  return "women";
+  audienceCache.set(model, audience);
+  return audience;
 }
 
 export function filterModelsByAudience(models: ImportedModel[], audience?: ModelAudience[]) {
@@ -289,10 +296,17 @@ function logMetric(value: number) {
   return value > 0 ? Math.log10(value + 1) : 0;
 }
 
+function audienceKey(audience?: ModelAudience[]) {
+  return audience?.length ? modelAudienceValues.filter((value) => audience.includes(value)).join(",") : "all";
+}
+
 export function getImportedModelOrganicScore(model: ImportedModel) {
+  const cached = organicScoreCache.get(model);
+  if (typeof cached === "number") return cached;
+
   const sourceOrderBoost = Math.max(0, 200 - (model.sourceSort || model.sourceOrder + 1)) * 0.7;
 
-  return Number(
+  const score = Number(
     (
       Math.min(model.popularityScore, 1000) +
       logMetric(model.sourceFanCount) * 430 +
@@ -305,16 +319,27 @@ export function getImportedModelOrganicScore(model: ImportedModel) {
       sourceOrderBoost
     ).toFixed(2)
   );
+  organicScoreCache.set(model, score);
+  return score;
 }
 
 export function getImportedModelEffectiveScore(model: ImportedModel, audience?: ModelAudience[]) {
+  const key = audienceKey(audience);
+  const cachedByAudience = effectiveScoreCache.get(model);
+  const cached = cachedByAudience?.get(key);
+  if (typeof cached === "number") return cached;
+
   const control = getModelPromotionControl(model.slug);
   const adjustment = Number.isFinite(control.scoreAdjustment) ? Number(control.scoreAdjustment) : 0;
   const suppressPenalty = control.suppressed ? 100_000 : 0;
   const brokenImagePenalty = control.brokenImage || model.imageStatus === "MISSING_IMAGE" ? 2_500 : 0;
   const womenPriorityBoost = audience && !audience.includes("men") && getImportedModelAudience(model) === "women" ? 4_000 : 0;
 
-  return Number((getImportedModelOrganicScore(model) + adjustment + womenPriorityBoost - suppressPenalty - brokenImagePenalty).toFixed(2));
+  const score = Number((getImportedModelOrganicScore(model) + adjustment + womenPriorityBoost - suppressPenalty - brokenImagePenalty).toFixed(2));
+  const nextCache = cachedByAudience ?? new Map<string, number>();
+  nextCache.set(key, score);
+  effectiveScoreCache.set(model, nextCache);
+  return score;
 }
 
 function popularityOrdered(models: ImportedModel[], audience?: ModelAudience[]) {
@@ -325,6 +350,20 @@ function popularityOrdered(models: ImportedModel[], audience?: ModelAudience[]) 
       second.clickCount - first.clickCount ||
       first.sourceOrder - second.sourceOrder
   );
+}
+
+function getPopularityOrderedImportedModels(audience?: ModelAudience[]) {
+  const cache = getModelDirectoryCache();
+  const key = audienceKey(audience);
+  const cachedByAudience = popularityModelsCache.get(cache);
+  const cached = cachedByAudience?.get(key);
+  if (cached) return cached;
+
+  const ordered = popularityOrdered(filterModelsByAudience(getImportedModels(), audience), audience);
+  const nextCache = cachedByAudience ?? new Map<string, ImportedModel[]>();
+  nextCache.set(key, ordered);
+  popularityModelsCache.set(cache, nextCache);
+  return ordered;
 }
 
 function slugTerms(slug: string) {
@@ -461,7 +500,7 @@ export function getModelsForSection(slug: string, limit?: number, audience?: Mod
 }
 
 export function getTopImportedModels(limit = 12, audience?: ModelAudience[]) {
-  return popularityOrdered(filterModelsByAudience(getImportedModels(), audience), audience).slice(0, limit);
+  return getPopularityOrderedImportedModels(audience).slice(0, limit);
 }
 
 function homepageEligible(model: ImportedModel) {
@@ -475,7 +514,7 @@ function pickHomepageModels(slugs: string[], count: number, used: Set<string>, m
     .map((slug) => bySlug.get(slug))
     .filter((model): model is ImportedModel => Boolean(model && homepageEligible(model) && !used.has(model.slug)));
   const pinnedSlugs = new Set(pinned.map((model) => model.slug));
-  const fill = popularityOrdered(models, audience).filter((model) => homepageEligible(model) && !used.has(model.slug) && !pinnedSlugs.has(model.slug));
+  const fill = getPopularityOrderedImportedModels(audience).filter((model) => homepageEligible(model) && !used.has(model.slug) && !pinnedSlugs.has(model.slug));
   const picked = [...pinned, ...fill].slice(0, count);
   picked.forEach((model) => used.add(model.slug));
   return picked;
@@ -495,6 +534,24 @@ export function getHomepageModelPlacements(audience = defaultModelAudienceSelect
 export function getFeaturedModelForSection(slug: string, audience?: ModelAudience[]) {
   const models = getModelsForSection(slug, undefined, audience);
   return models.find(homepageEligible) ?? models[0];
+}
+
+export function getFeaturedModelsForSections(slugs: string[], audience?: ModelAudience[]) {
+  const wanted = new Set(slugs);
+  const featured = new Map<string, ImportedModel>();
+
+  for (const model of getPopularityOrderedImportedModels(audience)) {
+    if (!homepageEligible(model)) continue;
+
+    for (const slug of model.categorySlugs) {
+      if (!wanted.has(slug) || featured.has(slug)) continue;
+      featured.set(slug, model);
+    }
+
+    if (featured.size >= wanted.size) break;
+  }
+
+  return featured;
 }
 
 export function getImportedModelAudienceStat(model: ImportedModel) {

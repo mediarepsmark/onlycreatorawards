@@ -25,7 +25,7 @@ import { SearchPanel } from "@/components/onlycreatorawards/SearchPanel";
 import { SiteShell } from "@/components/onlycreatorawards/SiteShell";
 import { Badge } from "@/components/ui/badge";
 import {
-  getFeaturedModelForSection,
+  getFeaturedModelsForSections,
   getHomepageModelPlacements,
   getModelDirectorySections,
   getModelDirectoryStats
@@ -70,12 +70,17 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   const featuredModels = homepageModels.featured;
   const heroModels = homepageModels.hero;
   const modelLeaderboard = homepageModels.leaderboard;
-  const modelSections = getModelDirectorySections(audience)
+  const modelSectionRows = getModelDirectorySections(audience)
     .filter((section) => section.count >= 5)
-    .slice(0, 8)
+    .slice(0, 8);
+  const featuredBySection = getFeaturedModelsForSections(
+    modelSectionRows.map((section) => section.slug),
+    audience
+  );
+  const modelSections = modelSectionRows
     .map((section) => ({
       section: { ...section, href: modelSectionHref(section.slug, audience) },
-      model: getFeaturedModelForSection(section.slug, audience)
+      model: featuredBySection.get(section.slug)
     }));
   const creators = getCreators()
     .filter((creator) => creator.status === "PUBLISHED")
