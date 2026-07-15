@@ -119,7 +119,7 @@ export function ModelDirectoryAdminPanel({ section }: { section: string }) {
               <code>
                 {`cd /home/httpd/html/onlycreatorawards.com/app
 /usr/bin/docker run --rm -v "$PWD:/work" -w /work node:22-bookworm-slim node scripts/sync-traffichaus-models.mjs
-/usr/bin/docker run --rm -v "$PWD:/work" -w /work node:22-bookworm-slim node scripts/audit-model-images.mjs --limit=1000`}
+/usr/bin/docker run --rm --network host -v "$PWD:/work" -w /work node:22-bookworm-slim node scripts/audit-model-images.mjs --limit=1000`}
               </code>
             </pre>
           </CardContent>
