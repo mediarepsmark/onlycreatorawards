@@ -535,6 +535,10 @@ function homepageEligible(model: ImportedModel) {
   return Boolean(model.profileImageUrl) && model.imageStatus !== "BROKEN_IMAGE" && model.imageStatus !== "MISSING_IMAGE" && !control.homepageBlocked && !control.brokenImage;
 }
 
+function modelImageKey(model: ImportedModel) {
+  return model.profileImageUrl?.trim().toLowerCase() ?? "";
+}
+
 function pickHomepageModels(slugs: string[], count: number, used: Set<string>, models: ImportedModel[], audience = defaultModelAudienceSelection) {
   const bySlug = new Map(models.map((model) => [model.slug, model]));
   const pinned = slugs
@@ -566,13 +570,22 @@ export function getFeaturedModelForSection(slug: string, audience?: ModelAudienc
 export function getFeaturedModelsForSections(slugs: string[], audience?: ModelAudience[]) {
   const wanted = new Set(slugs);
   const featured = new Map<string, ImportedModel>();
+  const usedModels = new Set<string>();
+  const usedImages = new Set<string>();
 
   for (const model of getPopularityOrderedImportedModels(audience)) {
     if (!homepageEligible(model)) continue;
+    if (usedModels.has(model.slug)) continue;
+
+    const imageKey = modelImageKey(model);
+    if (imageKey && usedImages.has(imageKey)) continue;
 
     for (const slug of model.categorySlugs) {
       if (!wanted.has(slug) || featured.has(slug)) continue;
       featured.set(slug, model);
+      usedModels.add(model.slug);
+      if (imageKey) usedImages.add(imageKey);
+      break;
     }
 
     if (featured.size >= wanted.size) break;

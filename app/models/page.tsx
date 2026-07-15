@@ -12,7 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   filterModelsByAudience,
-  getFeaturedModelForSection,
+  getFeaturedModelsForSections,
   getImportedModels,
   getModelDirectorySections,
   getModelDirectoryStats
@@ -87,12 +87,17 @@ export default async function ModelsPage({ searchParams }: ModelsPageProps) {
   const currentPage = Math.min(page, totalPages);
   const pageModels = models.slice((currentPage - 1) * pageSize, currentPage * pageSize);
   const stats = getModelDirectoryStats();
-  const sections = getModelDirectorySections(audience)
+  const sectionRows = getModelDirectorySections(audience)
     .filter((section) => section.count >= 5)
-    .slice(0, 12)
+    .slice(0, 12);
+  const featuredBySection = getFeaturedModelsForSections(
+    sectionRows.map((section) => section.slug),
+    audience
+  );
+  const sections = sectionRows
     .map((section) => ({
       section: { ...section, href: modelSectionHref(section.slug, audience) },
-      model: getFeaturedModelForSection(section.slug, audience)
+      model: featuredBySection.get(section.slug)
     }));
 
   return (
