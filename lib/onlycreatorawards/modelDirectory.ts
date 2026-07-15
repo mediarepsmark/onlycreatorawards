@@ -109,6 +109,8 @@ const organicScoreCache = new WeakMap<ImportedModel, number>();
 const effectiveScoreCache = new WeakMap<ImportedModel, Map<string, number>>();
 const popularityModelsCache = new WeakMap<ModelDirectoryCache, Map<string, ImportedModel[]>>();
 const placeholderTextValues = new Set(["n/a", "na", "none", "null", "undefined", "-", "--"]);
+const promotionOverridesTtlMs = 5_000;
+let promotionOverridesMemo: { loadedAt: number; value: ModelPromotionOverrides } | null = null;
 
 function readJson<T>(filePath: string, fallback: T): T {
   try {
@@ -394,6 +396,10 @@ function getOverrides() {
 }
 
 function getPromotionOverrides() {
+  if (promotionOverridesMemo && Date.now() - promotionOverridesMemo.loadedAt < promotionOverridesTtlMs) {
+    return promotionOverridesMemo.value;
+  }
+
   const manual = readJson<ModelPromotionOverrides>(promotionOverridesPath, { homepage: {}, models: {} });
   const imageAudit = readJson<ModelPromotionOverrides>(imageAuditOverridesPath, { homepage: {}, models: {} });
   const models: Record<string, ModelPromotionControl> = { ...(manual.models ?? {}) };
@@ -408,10 +414,12 @@ function getPromotionOverrides() {
     };
   });
 
-  return {
+  const value = {
     ...manual,
     models
   };
+  promotionOverridesMemo = { loadedAt: Date.now(), value };
+  return value;
 }
 
 export function getModelPromotionControl(slug: string): ModelPromotionControl {
